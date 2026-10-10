@@ -160,9 +160,13 @@ class OpenKart:
             self.devices.remove(client)
             client.close()
 
-    async def set_state(self, state: State):
+    async def set_state(self, state: State, channel: int = None, force: bool = False):
       async with self._state_lock:
-        if state == self.state: return
+        if not force and state == self.state and (channel is None or channel == getattr(self, 'pairing_channel', None)):
+            return
+
+        if channel in (1, 6, 11):
+            self.pairing_channel = channel
 
         if not self.group_info and state == self.State.PAIRING:
             raise AttributeError('Must set group_info first')
@@ -206,9 +210,15 @@ class OpenKart:
                 ssid_b64 = binascii.b2a_base64(rand[0x10:]).decode().strip()
                 self.pairing_ssid = f'openkart-pair_{ssid_b64}'
 
+                chan = getattr(self, 'pairing_channel', None) or (self.group_info.channel if self.group_info else 6)
+                if chan not in (1, 6, 11):
+                    chan = 6
+                self.pairing_channel = chan
+
                 pairing_info = GroupInfo(
                     ssid=self.pairing_ssid,
                     psk=hashlib.sha256(self.pairing_seed).digest(),
+                    channel=chan
                 )
 
                 await self.ap.start(pairing_info, temporary=True)

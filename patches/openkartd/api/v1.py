@@ -178,12 +178,14 @@ async def get_state_handler(request):
 async def handler(request):
     body = await request.json()
     state_str = body.get('state')
+    channel = body.get('channel')
+    force = bool(body.get('force', False))
     state = request.app.openkart.State.__members__.get(state_str)
     if state is None:
         raise web.HTTPNotAcceptable(text=f'unknown state {state_str}')
 
     try:
-        await request.app.openkart.set_state(state)
+        await request.app.openkart.set_state(state, channel=channel, force=force)
     except AttributeError:
         raise web.HTTPNotAcceptable(text='server not configured for this')
 
@@ -254,10 +256,9 @@ class API(web.Application):
         d['state'] = self.openkart.state._name_
         if self.openkart.pairing_seed and self.openkart.pairing_ssid:
             pairing = d.setdefault('pairing', {})
-            if self.openkart.pairing_ssid != pairing.get('ssid'):
-                pairing['seed'] = binascii.hexlify(self.openkart.pairing_seed).decode()
-                pairing['ssid'] = self.openkart.pairing_ssid
-
+            pairing['seed'] = binascii.hexlify(self.openkart.pairing_seed).decode()
+            pairing['ssid'] = self.openkart.pairing_ssid
+            pairing['channel'] = getattr(self.openkart, 'pairing_channel', 6) or 6
         elif 'pairing' in d:
             del d['pairing']
 

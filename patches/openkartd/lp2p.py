@@ -34,7 +34,7 @@ driver=nl80211
 hw_mode=g
 channel={channel}
 
-ignore_broadcast_ssid=2
+ignore_broadcast_ssid=0
 ssid={ssid}
 
 static_ccmp_key={ccmp}
@@ -163,8 +163,8 @@ class LP2PAP:
         config_path.write_text(config)
 
         self.hostapd = await asyncio.create_subprocess_exec(
-            self.hostapd_path, str(config_path.resolve()),
-            stdout=subprocess.PIPE,
+            self.hostapd_path, '-dd', str(config_path.resolve()),
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
 
         deadline = asyncio.get_running_loop().time() + 12
@@ -189,6 +189,20 @@ class LP2PAP:
             l.info('hostapd: %s', line.decode(errors='replace').rstrip())
             if b'AP-ENABLED' in line:
                 break
+
+        async def _log_hostapd_continuous():
+            try:
+                while self.hostapd and self.hostapd.returncode is None:
+                    line = await self.hostapd.stdout.readline()
+                    if not line:
+                        break
+                    text = line.decode(errors='replace').rstrip()
+                    if any(k in text for k in ('STA', 'IEEE', 'mgmt', 'assoc', 'auth', 'probe', 'Probe', 'deauth', 'wsec', 'key', 'error', 'failed', 'FAIL', 'recv', 'RX', 'event', 'EVENT')):
+                        l.info('hostapd: %s', text)
+            except Exception:
+                pass
+
+        asyncio.create_task(_log_hostapd_continuous())
 
         loop = asyncio.get_running_loop()
         _, self.ctrl = await loop.create_datagram_endpoint(

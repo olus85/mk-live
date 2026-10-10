@@ -23,6 +23,12 @@ openkart.conf
 *.xci
 *.nca
 
+# Android & build artifacts
+*.apk
+.gradle/
+build/
+
+
 # OS/editor
 .DS_Store
 Thumbs.db

@@ -386,33 +386,65 @@ async def api_imu_heading_reset(req):
 
 
 async def api_openkart_state(req):
-    """POST {"state": "RUNNING"|"DOWN"|"PAIRING"} - switch the OpenKart AP."""
+    """POST {"state": "RUNNING"|"DOWN"|"PAIRING", "channel": 1|6|11, "force": bool} - switch the OpenKart AP."""
     try:
         body = await req.json()
     except ValueError:
         body = {}
     state = str(body.get('state', '')).upper()
+    channel = body.get('channel')
+    if channel is not None:
+        try:
+            channel = int(channel)
+        except ValueError:
+            channel = None
+    force = bool(body.get('force', False))
     if state not in ('RUNNING', 'DOWN', 'PAIRING'):
         return web.json_response({'ok': False, 'error': 'state must be RUNNING, DOWN or PAIRING'}, status=400)
     mark_openkart_state_change()
     async with ClientSession(timeout=ClientTimeout(total=15.0)) as session:
         try:
-            code = await _post_openkart_state(session, state)
+            code = await _post_openkart_state(session, state, channel=channel, force=force)
         except Exception as e:
             return web.json_response({'ok': False, 'error': f'{type(e).__name__}: {e}'}, status=502)
         if code >= 400:
             return web.json_response({'ok': False, 'error': f'OpenKart answered HTTP {code}'}, status=502)
         pairing = None
+        used_channel = channel or 6
         if state == 'PAIRING':
             # The pairing AP comes up asynchronously; wait until seed/SSID are published.
-            for _ in range(20):
+            for _ in range(25):
                 current = await _openkart_json(session, '/v1/state')
                 pairing = current.get('pairing')
                 if pairing:
+                    used_channel = pairing.get('channel') or channel or 6
                     break
-                await asyncio.sleep(0.25)
-    return web.json_response({'ok': True, 'state': state,
-                              'pairing_ready': bool(pairing) if state == 'PAIRING' else None})
+                await asyncio.sleep(0.2)
+    return web.json_response({
+        'ok': True,
+        'state': state,
+        'pairing_ready': bool(pairing) if state == 'PAIRING' else None,
+        'pairing': pairing,
+        'channel': used_channel
+    })
+
+
+async def api_pairing_info(req):
+    async with ClientSession(timeout=ClientTimeout(total=2.0)) as session:
+        try:
+            state = await _openkart_json(session, '/v1/state')
+        except Exception as e:
+            return web.json_response({'ok': False, 'error': str(e)}, status=502)
+    pairing = state.get('pairing')
+    used_channel = 6
+    if pairing and pairing.get('channel'):
+        used_channel = int(pairing.get('channel'))
+    return web.json_response({
+        'ok': True,
+        'state': state.get('state'),
+        'pairing': pairing,
+        'channel': used_channel
+    })
 
 
 async def api_pairing_qr(req):
@@ -427,7 +459,7 @@ async def api_pairing_qr(req):
     pairing = state.get('pairing')
     if state.get('state') != 'PAIRING' or not pairing:
         return web.Response(status=409, text='OpenKart is not in PAIRING state')
-    channel = await ap_channel() or 1
+    channel = pairing.get('channel') or await ap_channel() or 1
     try:
         payload = pairing_payload(pairing['seed'], pairing['ssid'], channel)
     except (KeyError, ValueError) as e:
@@ -435,9 +467,19 @@ async def api_pairing_qr(req):
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=16, border=4)
     qr.add_data(payload)
     qr.make(fit=True)
-    buf = io.BytesIO()
-    qr.make_image(fill_color='black', back_color='white').save(buf, format='PNG')
-    return web.Response(body=buf.getvalue(), content_type='image/png',
+    try:
+        buf = io.BytesIO()
+        qr.make_image(fill_color='black', back_color='white').save(buf, format='PNG')
+        png_bytes = buf.getvalue()
+    except Exception:
+        import png
+        matrix = qr.get_matrix()
+        scale = 16
+        rows = [[0 if c else 255 for c in r for _ in range(scale)] for r in matrix for _ in range(scale)]
+        buf = io.BytesIO()
+        png.Writer(len(rows[0]), len(rows), greyscale=True).write(buf, rows)
+        png_bytes = buf.getvalue()
+    return web.Response(body=png_bytes, content_type='image/png',
                         headers={'Cache-Control': 'no-store', 'X-Pairing-Channel': str(channel),
                                  'X-Pairing-SSID': pairing['ssid']})
 
@@ -541,9 +583,14 @@ async def _get_worker_status(session):
         return await resp.json()
 
 
-async def _post_openkart_state(session, state):
+async def _post_openkart_state(session, state, channel=None, force=False):
+    payload = {'state': state}
+    if channel is not None:
+        payload['channel'] = channel
+    if force:
+        payload['force'] = True
     async with session.post(f'{OPENKART_API}/v1/state',
-                            json={'state': state}) as resp:
+                            json=payload) as resp:
         await resp.read()
         return resp.status
 
@@ -811,6 +858,7 @@ async def start():
     app.router.add_get('/', index)
     app.router.add_get('/api/status', api_status)
     app.router.add_post('/api/openkart/state', api_openkart_state)
+    app.router.add_get('/api/pairing/info', api_pairing_info)
     app.router.add_get('/api/pairing/qr.png', api_pairing_qr)
     app.router.add_get('/api/telemetry/status', api_telemetry_status)
     app.router.add_post('/api/telemetry/record', api_telemetry_record)
