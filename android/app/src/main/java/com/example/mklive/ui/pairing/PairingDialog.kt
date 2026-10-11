@@ -85,7 +85,7 @@ fun PairingDialog(
     }
     var isFullscreenQr by remember { mutableStateOf(false) }
 
-    val activeSsid = serverPairingSsid ?: "Wird geladen..."
+    val activeSsid = serverPairingSsid ?: "Loading..."
     val displayChannel = serverPairingChannel ?: selectedChannel
 
     if (isFullscreenQr) {
@@ -107,7 +107,7 @@ fun PairingDialog(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "MARIO KART 15–20 CM VOR DEN QR-CODE HALTEN",
+                        text = "HOLD MARIO KART 15–20 CM IN FRONT OF QR CODE",
                         color = Color.Black,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
@@ -128,7 +128,7 @@ fun PairingDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "SSID: $activeSsid · KANAL: $displayChannel · (Tippen zum Schließen)",
+                        text = "SSID: $activeSsid · CH: $displayChannel · (Tap to close)",
                         color = Color(0xFF333333),
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
@@ -183,7 +183,7 @@ fun PairingDialog(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Starte AP...",
+                                text = "Starting AP...",
                                 color = Color.Black,
                                 fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace,
@@ -214,7 +214,7 @@ fun PairingDialog(
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            text = if (serverQrBitmap != null) "● AP BEREIT: $activeSsid" else "○ INITIALISIERE AP (KANAL $selectedChannel)...",
+                            text = if (serverQrBitmap != null) "● AP READY: $activeSsid" else "○ INITIALIZING AP (CH $selectedChannel)...",
                             color = if (serverQrBitmap != null) Color(0xFF00E676) else Color(0xFFFFB300),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
@@ -224,14 +224,14 @@ fun PairingDialog(
                     }
 
                     Text(
-                        text = "1. Mario Kart einschalten (USB ausgesteckt)\n2. Kamera 15–20 cm vor diesen QR-Code halten\n3. Blaue LED leuchtet durchgehend bei Erfolg",
+                        text = "1. Turn on Mario Kart (unplug USB cable)\n2. Hold camera 15–20 cm in front of QR code\n3. Blue LED stays solid on success",
                         color = Color(0xCCFFFFFF),
                         fontSize = 10.sp,
                         lineHeight = 14.sp
                     )
 
                     Text(
-                        text = "AP SSID: $activeSsid\nKanal: $displayChannel",
+                        text = "AP SSID: $activeSsid\nChannel: $displayChannel",
                         color = Color(0xFF00E5FF),
                         fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace
@@ -270,7 +270,7 @@ fun PairingDialog(
                             modifier = Modifier.height(28.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0x4400E5FF))
                         ) {
-                            Text("VOLLBILD", fontSize = 10.sp, color = Color.White)
+                            Text("FULLSCREEN", fontSize = 10.sp, color = Color.White)
                         }
                     }
 
@@ -287,7 +287,7 @@ fun PairingDialog(
                             shape = RoundedCornerShape(4.dp),
                             modifier = Modifier.height(32.dp)
                         ) {
-                            Text("Schließen", color = Color.White, fontSize = 11.sp)
+                            Text("Close", color = Color.White, fontSize = 11.sp)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -298,7 +298,7 @@ fun PairingDialog(
                             shape = RoundedCornerShape(4.dp),
                             modifier = Modifier.height(32.dp)
                         ) {
-                            Text("Neuer Code", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("New Code", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

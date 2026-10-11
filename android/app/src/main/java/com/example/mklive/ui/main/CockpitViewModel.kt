@@ -265,7 +265,7 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
             val savedPath = videoRecorder.stopRecording(context)
             if (savedPath != null) {
                 val fileName = savedPath.substringAfterLast("/")
-                Toast.makeText(context, "Aufnahme gespeichert: $fileName", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Recording saved: $fileName", Toast.LENGTH_LONG).show()
             }
         } else {
             // Ensure mjpeg stream is running to supply frames for recorder
@@ -275,9 +275,9 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
             }
             val ok = videoRecorder.startRecording(context, recordOverlay = _recordOverlayEnabled.value)
             if (ok) {
-                Toast.makeText(context, "Aufnahme gestartet (HUD Overlay aktiv)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Recording started (HUD Overlay active)", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Aufnahmefehler!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Recording error!", Toast.LENGTH_SHORT).show()
             }
         }
     }

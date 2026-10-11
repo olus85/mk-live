@@ -76,7 +76,7 @@ fun SettingsDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "COCKPIT & BASIS-STATION EINSTELLUNGEN",
+                        text = "COCKPIT & BASE STATION SETTINGS",
                         color = Color(0xFF00E5FF),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
@@ -113,7 +113,7 @@ fun SettingsDialog(
                         // Section: Base Station IP
                         Column {
                             Text(
-                                text = "BASIS-STATION IP-ADRESSE:",
+                                text = "BASE STATION IP ADDRESS:",
                                 color = Color.White,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
@@ -142,7 +142,7 @@ fun SettingsDialog(
                         // Section: Video Mode
                         Column {
                             Text(
-                                text = "VIDEO STREAMING MODUS:",
+                                text = "VIDEO STREAMING MODE:",
                                 color = Color.White,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
@@ -188,20 +188,20 @@ fun SettingsDialog(
                         }
                     }
 
-                    // RIGHT COLUMN: Videoaufnahme & Recorder Optionen
+                    // RIGHT COLUMN: Video Recording Options
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "AUFNAHME-EINSTELLUNGEN:",
+                            text = "RECORDING SETTINGS:",
                             color = Color.White,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace
                         )
 
-                        // Option 1: Cockpit HUD im Video
+                        // Option 1: Cockpit HUD in Video
                         Surface(
                             color = Color(0xFF141A1E),
                             shape = RoundedCornerShape(6.dp),
@@ -215,8 +215,8 @@ fun SettingsDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("Cockpit-HUD im Video", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text("Tacho, Gas & Telemetrie einblenden", color = Color(0xFF78909C), fontSize = 9.sp)
+                                    Text("Cockpit HUD in Video", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text("Overlay speed, throttle & telemetry", color = Color(0xFF78909C), fontSize = 9.sp)
                                 }
                                 Switch(
                                     checked = recordOverlay,
@@ -232,7 +232,7 @@ fun SettingsDialog(
                             }
                         }
 
-                        // Option 2: Audioaufnahme
+                        // Option 2: Audio Recording
                         Surface(
                             color = Color(0xFF141A1E),
                             shape = RoundedCornerShape(6.dp),
@@ -246,8 +246,8 @@ fun SettingsDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("Audio / Mikrofon", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text("Ton über Smartphone-Mikrofon", color = Color(0xFF78909C), fontSize = 9.sp)
+                                    Text("Audio / Microphone", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text("Record phone microphone audio", color = Color(0xFF78909C), fontSize = 9.sp)
                                 }
                                 Switch(
                                     checked = recordAudio,
@@ -265,7 +265,7 @@ fun SettingsDialog(
 
                         // Storage location info
                         Text(
-                            text = "Speicherort: Filme/MK_Live (in Galerie sichtbar)",
+                            text = "Storage: Movies/MK_Live (visible in gallery)",
                             color = Color(0xFF90A4AE),
                             fontSize = 10.sp,
                             fontFamily = FontFamily.Monospace
@@ -286,7 +286,7 @@ fun SettingsDialog(
                         shape = RoundedCornerShape(4.dp),
                         modifier = Modifier.height(36.dp)
                     ) {
-                        Text("Abbrechen", fontSize = 11.sp, color = Color(0xFFCFD8DC))
+                        Text("Cancel", fontSize = 11.sp, color = Color(0xFFCFD8DC))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
@@ -298,7 +298,7 @@ fun SettingsDialog(
                         shape = RoundedCornerShape(4.dp),
                         modifier = Modifier.height(36.dp)
                     ) {
-                        Text("Speichern & Verbinden", color = Color(0xFF00222A), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("Save & Connect", color = Color(0xFF00222A), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

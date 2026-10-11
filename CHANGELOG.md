@@ -1,42 +1,52 @@
 # Changelog
 
-Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
+All notable changes to this project will be documented in this file.
 
-Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
-und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.0.1] - 2026-10-11
+
+### Added
+* **Full-Bleed 3D App Icon & Round Launcher Support:**
+  * Replaced letterboxed icon with dynamic, edge-to-edge 3D Mario racing driver icon.
+  * Native circular icon (`ic_launcher_round.png`) filling the entire silhouette for Google Pixel Launcher and Android 14+.
+
+### Changed
+* **Complete English Localization:**
+  * All Cockpit UI elements, settings dialog, pairing menus, and system notifications translated to English.
+  * Standardized all project documentation and GitHub releases to English.
 
 ---
 
 ## [1.0.0] - 2026-10-11
 
-### Hinzugefügt
-* **Integriertes Video-Recording mit Cockpit-HUD (Killer-Feature):**
-  * Hardwarebeschleunigte MP4-Videoaufnahme über `MediaCodec` & `MediaMuxer` (1280x720 @ 30 FPS).
-  * Direktes Einbrennen der Live-Telemetrie ins Video (Tacho, Gasbalken, Boost-Indikator, Lenkwinkel, Bremse, Akkustand, Zeitstempel & REC-Timer).
-  * Automatischer MediaStore-Scan: Aufnahmen landen sofort in `Filme/MK_Live` und sind in der Android-Galerie / Google Fotos verfügbar.
-  * Aufnahme-Optionen in den Settings: Cockpit-HUD-Overlay an/aus, Audioaufnahme über Smartphone-Mikrofon an/aus.
-* **Neues stylisches App-Icon:**
-  * Eigenes 3D-Vektor-Icon mit Mario im Rennkart, montierter FPV-Dachkamera, leuchtenden Speedtrails und Carbon-Badge.
-  * Vollständige Unterstützung für runde App-Icons (`ic_launcher_round.png`) auf Google Pixel und Android 14+.
-* **PC Basis-Station & Funk-Optimierung:**
-  * Schneller Desktop-Starter (`Start_Basis_Station.desktop`) und Automatisierungsskript (`start_basis_station.sh`).
-  * Sendeleistung der WLAN-Karte auf 20 dBm (100 mW EIRP, ETSI/DE) maximiert.
-  * Ausführliche Schritt-für-Schritt-Anleitung auf dem Desktop (`ANLEITUNG_BASIS_STATION.txt`).
-* **Erweiterte Controller-Unterstützung & Fahrphysik:**
-  * R2-Trigger dosiert Gas feinfühlig bis maximal 70 % für kontrollierte Kurvenfahrten.
-  * A- und X-Taste aktivieren den 100 % Vollgas-Boost für maximale Beschleunigung.
-  * Automatischer 30 Hz Keep-Alive Stream: Verhindert das lästige 1,8s-Notbremsen des Karts beim Gedrückthalten des Gases.
-  * B-Taste fängt Zurück-Navigation ab, sodass die App während der Fahrt nicht versehentlich schließt.
+### Added
+* **Integrated Video Recording with Cockpit HUD Overlay (Killer Feature):**
+  * Hardware-accelerated MP4 video recording via `MediaCodec` and `MediaMuxer` (1280x720 @ 30 FPS).
+  * Real-time live telemetry burned directly into recorded video (speedometer, throttle gauge, boost indicator, steering angle, brake status, battery percentage, timestamp & REC duration timer).
+  * Automatic MediaStore scanner: recorded clips appear instantly in `Movies/MK_Live` and Google Photos / Android Gallery.
+  * Recording options in Settings: toggle Cockpit HUD overlay on/off, toggle phone microphone audio recording on/off.
+* **PC Base Station & Wi-Fi Transmission Optimization:**
+  * Desktop starter shortcut (`Start_Basis_Station.desktop`) and automated service management script (`start_basis_station.sh`).
+  * Wi-Fi transmission power boosted to 20 dBm (100 mW EIRP, ETSI/DE) for maximum connection stability.
+  * Desktop setup guide for Linux base station operation.
+* **Enhanced Controller Support & Driving Physics:**
+  * Analog R2 / RT trigger mapped to 0–70% throttle for precise cornering and handling.
+  * A and X buttons trigger 100% full-throttle boost for instant acceleration.
+  * Continuous 30 Hz keep-alive stream preventing the kart's 1.8s deadman emergency brake when holding the throttle.
+  * Gamepad B button intercepted to prevent accidentally exiting the app while racing.
 
-### Verbessert
-* **Settings-Menü:**
-  * Vollständig für Querformat (Landscape) überarbeitet: Passt ohne Scrollen perfekt auf den Bildschirm.
-  * IP-Eingabe für Basis-Station mit Schnellverbindung.
-  * Umschaltung zwischen H.264 (Low-Latency) und MJPEG (Universal).
-* **Cockpit UI & Instrumente:**
-  * Entfernung aller störenden Root- und Magisk-Hinweise.
-  * Schneller Zugriff auf Pairing, Aufnahme und Einstellungen direkt aus der oberen Statusleiste.
-  * Integriertes Kompassband, G-Meter und Akku-Statusanzeige.
+### Changed
+* **Settings Dialog:**
+  * Completely redesigned for landscape screens: compact 2-column layout that fits on any display without scrolling.
+  * Base station IP configuration with fast reconnect.
+  * Toggle between H.264 (low latency) and MJPEG (universal compatibility) streams.
+* **Cockpit UI & Telemetry Instruments:**
+  * Clean status bar with fast access to Pairing, Recording, and Settings.
+  * Dynamic compass ribbon, G-force meter, and battery indicator.
 
-### Entfernt
-* Experimentelle Standalone-Funktionen für den internen Broadcom-Handychip entfernt, da Broadcom FullMAC-Firmwares keine proprietären Nintendo LP2P Vendor-IEs und statische CCMP-Verschlüsselung unterstützen.
+### Removed
+* Removed experimental direct smartphone Wi-Fi hotspot mode, as mobile Broadcom FullMAC Wi-Fi chips do not support Nintendo's proprietary 802.11 LP2P Vendor-IEs (`00:22:AA:06`) or static CCMP encryption.

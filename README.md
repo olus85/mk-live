@@ -113,7 +113,7 @@ systemctl --user status mk-live-openkart mk-live-video mk-live-web
    adb install -r MK-Live-Cockpit-v1.0.0.apk
    ```
 3. Open the **MK Live** app on your phone.
-4. Tap **Einstellungen (Settings)** and enter the IP address of your Base Station PC (e.g. `192.168.0.105`).
+4. Tap **⚙ Settings** and enter the IP address of your Base Station PC (e.g. `192.168.0.105`).
 5. Pair a Bluetooth controller (e.g. Xbox, PlayStation, 8BitDo) with your smartphone and start driving!
 
 ### 3. Pairing the Kart
