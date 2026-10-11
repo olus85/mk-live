@@ -14,6 +14,7 @@ import com.example.mklive.ui.hud.CockpitOverlay
 import com.example.mklive.ui.pairing.PairingDialog
 import com.example.mklive.ui.settings.SettingsDialog
 import com.example.mklive.ui.video.VideoSurfaceView
+import com.example.mklive.ui.vr.VrCockpitView
 
 @Composable
 fun CockpitScreen(
@@ -36,6 +37,9 @@ fun CockpitScreen(
     val showSettingsDialog by viewModel.isSettingsOpen.collectAsState()
     val showPairingDialog by viewModel.isPairingOpen.collectAsState()
 
+    val isVrMode by viewModel.isVrMode.collectAsState()
+    val currentLanguage by viewModel.currentLanguage.collectAsState()
+
     val isRecording by viewModel.isRecording.collectAsState()
     val recordingDurationSec by viewModel.recordingDurationSec.collectAsState()
     val recordOverlayEnabled by viewModel.recordOverlayEnabled.collectAsState()
@@ -57,44 +61,68 @@ fun CockpitScreen(
             viewModel.closeSettings()
         } else if (showPairingDialog) {
             viewModel.closePairing()
+        } else if (isVrMode) {
+            viewModel.setVrMode(false)
         }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 1. VIDEO LAYER (SurfaceView or MJPEG Bitmap)
-        VideoSurfaceView(
-            videoMode = videoMode,
-            h264Player = viewModel.h264Player,
-            mjpegBitmap = mjpegBitmap,
-            isStreamConnected = isStreamConnected,
-            modifier = Modifier.fillMaxSize()
-        )
+        if (isVrMode) {
+            // META QUEST 3 & VR HEADSET SBS 3D COCKPIT
+            VrCockpitView(
+                videoMode = videoMode,
+                h264Player = viewModel.h264Player,
+                mjpegBitmap = mjpegBitmap,
+                isStreamConnected = isStreamConnected,
+                openKartState = openKartState,
+                kartInfo = kartInfo,
+                driveCommand = currentCommand,
+                imuSnapshot = imuSnapshot,
+                videoFps = effectiveFps,
+                isRecording = isRecording,
+                recordingDurationSec = recordingDurationSec,
+                inputSource = inputSource,
+                onToggleVr = { viewModel.toggleVrMode() },
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            // STANDARD 2D COCKPIT VIEW
+            // 1. VIDEO LAYER (SurfaceView or MJPEG Bitmap)
+            VideoSurfaceView(
+                videoMode = videoMode,
+                h264Player = viewModel.h264Player,
+                mjpegBitmap = mjpegBitmap,
+                isStreamConnected = isStreamConnected,
+                modifier = Modifier.fillMaxSize()
+            )
 
-        // 2. VIRTUAL TOUCH CONTROLLER (Auto-hides with delay or on external gamepad)
-        VirtualTouchOverlay(
-            isGamepadActive = isGamepadActive,
-            onDriveCommand = { t, s, b, _ ->
-                viewModel.handleTouchInput(t, s, b)
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+            // 2. VIRTUAL TOUCH CONTROLLER (Auto-hides on external gamepad)
+            VirtualTouchOverlay(
+                isGamepadActive = isGamepadActive,
+                onDriveCommand = { t, s, b, _ ->
+                    viewModel.handleTouchInput(t, s, b)
+                },
+                modifier = Modifier.fillMaxSize()
+            )
 
-        // 3. COCKPIT INSTRUMENTS, HUD OVERLAY & TOP BAR
-        CockpitOverlay(
-            openKartState = openKartState,
-            kartInfo = kartInfo,
-            videoFps = effectiveFps,
-            driveCommand = currentCommand,
-            imuSnapshot = imuSnapshot,
-            inputSource = inputSource,
-            isRecording = isRecording,
-            recordingDurationSec = recordingDurationSec,
-            onRecordToggle = { viewModel.toggleRecording(context) },
-            onPairClicked = { viewModel.openPairing() },
-            onSettingsClicked = { viewModel.openSettings() },
-            onResetHeading = { viewModel.resetHeading() },
-            modifier = Modifier.fillMaxSize()
-        )
+            // 3. COCKPIT INSTRUMENTS, HUD OVERLAY & TOP BAR
+            CockpitOverlay(
+                openKartState = openKartState,
+                kartInfo = kartInfo,
+                videoFps = effectiveFps,
+                driveCommand = currentCommand,
+                imuSnapshot = imuSnapshot,
+                inputSource = inputSource,
+                isRecording = isRecording,
+                recordingDurationSec = recordingDurationSec,
+                onRecordToggle = { viewModel.toggleRecording(context) },
+                onPairClicked = { viewModel.openPairing() },
+                onSettingsClicked = { viewModel.openSettings() },
+                onToggleVrMode = { viewModel.toggleVrMode() },
+                onResetHeading = { viewModel.resetHeading() },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
 
         // 4. PAIRING DIALOG
         if (showPairingDialog) {
@@ -115,8 +143,12 @@ fun CockpitScreen(
                 currentVideoMode = videoMode,
                 isRecordingOverlay = recordOverlayEnabled,
                 isRecordingAudio = recordAudioEnabled,
+                isVrMode = isVrMode,
+                currentLanguage = currentLanguage,
                 onSetRecordingOverlay = { viewModel.setRecordingOverlay(it) },
                 onSetRecordingAudio = { viewModel.setRecordingAudio(it) },
+                onSetVrMode = { viewModel.setVrMode(it) },
+                onSetLanguage = { viewModel.setLanguage(context, it) },
                 onSave = { newIp, newMode ->
                     viewModel.saveSettings(newIp, newMode)
                 },

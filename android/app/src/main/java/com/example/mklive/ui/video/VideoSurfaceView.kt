@@ -78,7 +78,7 @@ fun VideoSurfaceView(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "NO VIDEO FEED · CHECK KART & CONNECTION",
+                    text = androidx.compose.ui.res.stringResource(com.example.mklive.R.string.video_no_feed),
                     color = Color(0xFFFF9100),
                     fontSize = 14.sp,
                     fontFamily = FontFamily.Monospace

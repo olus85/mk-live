@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,14 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.mklive.R
 
-/**
- * Nintendo Switch LP2P Pairing QR Dialog:
- * - Dynamic Channel (1, 6, 11) and Fresh Code generation directly synchronized with hostapd.
- * - Automatic 100% display brightness boost.
- * - Fullscreen mode (edge-to-edge pure white, max contrast).
- * - Exact 62-byte binary payload for the Mario Kart camera.
- */
 @Composable
 fun PairingDialog(
     serverQrBitmap: Bitmap?,
@@ -85,7 +80,7 @@ fun PairingDialog(
     }
     var isFullscreenQr by remember { mutableStateOf(false) }
 
-    val activeSsid = serverPairingSsid ?: "Loading..."
+    val activeSsid = serverPairingSsid ?: stringResource(R.string.pairing_loading)
     val displayChannel = serverPairingChannel ?: selectedChannel
 
     if (isFullscreenQr) {
@@ -107,7 +102,7 @@ fun PairingDialog(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "HOLD MARIO KART 15–20 CM IN FRONT OF QR CODE",
+                        text = stringResource(R.string.pairing_hold_qr),
                         color = Color.Black,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
@@ -128,7 +123,7 @@ fun PairingDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "SSID: $activeSsid · CH: $displayChannel · (Tap to close)",
+                        text = "SSID: $activeSsid · CH: $displayChannel · ${stringResource(R.string.pairing_tap_close)}",
                         color = Color(0xFF333333),
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
@@ -183,7 +178,7 @@ fun PairingDialog(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Starting AP...",
+                                text = stringResource(R.string.pairing_starting_ap),
                                 color = Color.Black,
                                 fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace,
@@ -201,7 +196,7 @@ fun PairingDialog(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "MARIO KART PAIRING",
+                        text = stringResource(R.string.pairing_title),
                         color = Color(0xFF00E5FF),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
@@ -214,7 +209,7 @@ fun PairingDialog(
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            text = if (serverQrBitmap != null) "● AP READY: $activeSsid" else "○ INITIALIZING AP (CH $selectedChannel)...",
+                            text = if (serverQrBitmap != null) stringResource(R.string.pairing_ap_ready, activeSsid) else stringResource(R.string.pairing_ap_init, selectedChannel),
                             color = if (serverQrBitmap != null) Color(0xFF00E676) else Color(0xFFFFB300),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
@@ -224,14 +219,14 @@ fun PairingDialog(
                     }
 
                     Text(
-                        text = "1. Turn on Mario Kart (unplug USB cable)\n2. Hold camera 15–20 cm in front of QR code\n3. Blue LED stays solid on success",
+                        text = "${stringResource(R.string.pairing_step1)}\n${stringResource(R.string.pairing_step2)}\n${stringResource(R.string.pairing_step3)}",
                         color = Color(0xCCFFFFFF),
                         fontSize = 10.sp,
                         lineHeight = 14.sp
                     )
 
                     Text(
-                        text = "AP SSID: $activeSsid\nChannel: $displayChannel",
+                        text = stringResource(R.string.pairing_channel_info, activeSsid, displayChannel.toString()),
                         color = Color(0xFF00E5FF),
                         fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace
@@ -270,7 +265,7 @@ fun PairingDialog(
                             modifier = Modifier.height(28.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0x4400E5FF))
                         ) {
-                            Text("FULLSCREEN", fontSize = 10.sp, color = Color.White)
+                            Text(stringResource(R.string.pairing_fullscreen), fontSize = 10.sp, color = Color.White)
                         }
                     }
 
@@ -287,7 +282,7 @@ fun PairingDialog(
                             shape = RoundedCornerShape(4.dp),
                             modifier = Modifier.height(32.dp)
                         ) {
-                            Text("Close", color = Color.White, fontSize = 11.sp)
+                            Text(stringResource(R.string.pairing_close), color = Color.White, fontSize = 11.sp)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -298,7 +293,7 @@ fun PairingDialog(
                             shape = RoundedCornerShape(4.dp),
                             modifier = Modifier.height(32.dp)
                         ) {
-                            Text("New Code", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.pairing_new_code), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

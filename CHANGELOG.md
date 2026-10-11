@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-10-11
+
+### Added
+* **Meta Quest 3 VR Mode & Stereoscopic 3D Cockpit (Killer Feature):**
+  * **Immersive Stereoscopic 3D (SBS):** Dual-viewport Side-By-Side rendering engine with customizable IPD parallax for high-immersion FPV driving directly inside VR.
+  * **Live Gyroscopic Artificial Horizon:** Dynamic attitude indicator and pitch ladder reacting instantly to real-time IMU telemetry (pitch, roll, yaw) streamed from the kart.
+  * **Native Meta Touch Plus Controller Mapping:**
+    * Smooth analog throttle on Right Trigger (0–70%).
+    * Instant 100% Boost on **[A]** and **[X]** buttons.
+    * Left Trigger / Grip for smooth braking and reverse.
+    * Left Thumbstick for precise steering.
+    * Button **[Y]** for one-click toggling between Flat HUD and Immersive VR mode.
+    * Thumbstick click (**L3/R3**) to instantly reset horizon orientation.
+  * **Haptic Rumble Feedback:** Tactile rumble pulses on full boost acceleration, heavy braking, and VR mode switching.
+  * **Custom Quest 3 App Icon:** Distinct full-bleed 3D Mario icon wearing a Meta Quest 3 VR headset (`ic_launcher.png` and `ic_launcher_round.png`) exclusively for the Quest build.
+  * **Oculus Platform Integration:** Quest manifest integration including `com.oculus.intent.category.VR`, targeting `quest2|questpro|quest3|quest3s`, 1920x1080 panel sizing, and hand tracking metadata.
+  * **Automated Quest Sideload Installer:** Added `scripts/install_quest3.sh` and `Install_Quest3.desktop` for 1-click ADB sideloading onto connected headsets.
+* **Bilingual Localization (German & English):**
+  * German localization fully restored alongside English.
+  * In-app language picker in Settings: seamlessly choose between **System Default**, **Deutsch**, or **English** with real-time UI switching.
+* **Multi-Flavor Build System:**
+  * `phone` flavor: Standard release with classic 3D racing Mario icon for Android smartphones.
+  * `quest` flavor: VR-optimized release with Oculus VR manifest and VR Mario icon for Meta Quest headsets.
+
+---
+
 ## [1.0.1] - 2026-10-11
 
 ### Added

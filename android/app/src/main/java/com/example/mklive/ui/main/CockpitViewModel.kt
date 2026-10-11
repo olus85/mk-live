@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mklive.R
 import com.example.mklive.model.DriveCommand
 import com.example.mklive.model.ImuSnapshot
 import com.example.mklive.model.KartDeviceInfo
@@ -92,6 +93,12 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     private val _isPairingOpen = MutableStateFlow(false)
     val isPairingOpen: StateFlow<Boolean> = _isPairingOpen.asStateFlow()
 
+    private val _isVrMode = MutableStateFlow(prefs.getBoolean("vr_mode", false))
+    val isVrMode: StateFlow<Boolean> = _isVrMode.asStateFlow()
+
+    private val _currentLanguage = MutableStateFlow(prefs.getString("app_language", "system") ?: "system")
+    val currentLanguage: StateFlow<String> = _currentLanguage.asStateFlow()
+
     fun openSettings() {
         _isSettingsOpen.value = true
     }
@@ -107,6 +114,20 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
 
     fun closePairing() {
         _isPairingOpen.value = false
+    }
+
+    fun setVrMode(enabled: Boolean) {
+        _isVrMode.value = enabled
+        prefs.edit().putBoolean("vr_mode", enabled).apply()
+    }
+
+    fun toggleVrMode() {
+        setVrMode(!_isVrMode.value)
+    }
+
+    fun setLanguage(context: Context, langCode: String) {
+        _currentLanguage.value = langCode
+        com.example.mklive.util.LocaleHelper.setLanguage(context, langCode)
     }
 
     private var pollJob: Job? = null
@@ -265,7 +286,8 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
             val savedPath = videoRecorder.stopRecording(context)
             if (savedPath != null) {
                 val fileName = savedPath.substringAfterLast("/")
-                Toast.makeText(context, "Recording saved: $fileName", Toast.LENGTH_LONG).show()
+                val msg = context.getString(R.string.toast_rec_saved, fileName)
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
             }
         } else {
             // Ensure mjpeg stream is running to supply frames for recorder
@@ -275,9 +297,11 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
             }
             val ok = videoRecorder.startRecording(context, recordOverlay = _recordOverlayEnabled.value)
             if (ok) {
-                Toast.makeText(context, "Recording started (HUD Overlay active)", Toast.LENGTH_SHORT).show()
+                val msg = context.getString(R.string.toast_rec_started)
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Recording error!", Toast.LENGTH_SHORT).show()
+                val msg = context.getString(R.string.toast_rec_error)
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             }
         }
     }

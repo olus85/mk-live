@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Meta Quest VR & Horizon OS Configuration -->
+    <uses-feature android:name="android.hardware.vr.headtracking" android:required="false" android:version="1" />
+    <uses-feature android:name="oculus.software.handtracking" android:required="false" />
+
+    <application>
+        <!-- Meta Quest Supported Devices & Panel Layout -->
+        <meta-data android:name="com.oculus.supportedDevices" android:value="quest2|questpro|quest3|quest3s" />
+        <meta-data android:name="com.oculus.intent.category.2D_IN_VR" android:value="true" />
+        <meta-data android:name="com.oculus.panel.default_width" android:value="1920" />
+        <meta-data android:name="com.oculus.panel.default_height" android:value="1080" />
+        <meta-data android:name="com.oculus.panel.density" android:value="160" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="com.oculus.intent.category.VR" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

@@ -1,3 +1,65 @@
 <resources>
     <string name="app_name">MK Live</string>
+
+    <!-- Cockpit HUD -->
+    <string name="hud_brand">MK LIVE</string>
+    <string name="hud_ap">AP</string>
+    <string name="hud_link">LINK</string>
+    <string name="hud_video">VIDEO</string>
+    <string name="hud_battery">BAT</string>
+    <string name="hud_pair_kart">PAIR KART</string>
+    <string name="hud_settings">⚙ SETTINGS</string>
+    <string name="hud_rec">🔴 REC</string>
+    <string name="hud_steer">STEER</string>
+    <string name="hud_throttle">THROTTLE</string>
+    <string name="hud_boost">🚀 BOOST 100%</string>
+    <string name="hud_brake">BRAKE</string>
+    <string name="hud_input">INPUT: %1$s</string>
+    <string name="hud_vr_mode">🥽 VR COCKPIT</string>
+    <string name="hud_normal_mode">📱 2D COCKPIT</string>
+
+    <!-- Video Feed -->
+    <string name="video_no_feed">NO VIDEO FEED · CHECK KART &amp; CONNECTION</string>
+
+    <!-- Settings Dialog -->
+    <string name="settings_title">COCKPIT &amp; BASE STATION SETTINGS</string>
+    <string name="settings_tag_pc">PC BASE STATION</string>
+    <string name="settings_tag_quest">META QUEST 3</string>
+    <string name="settings_base_ip">BASE STATION IP ADDRESS:</string>
+    <string name="settings_video_mode">VIDEO STREAMING MODE:</string>
+    <string name="settings_h264_label">H.264 (Low Latency)</string>
+    <string name="settings_mjpeg_label">MJPEG (Universal)</string>
+    <string name="settings_rec_title">RECORDING SETTINGS:</string>
+    <string name="settings_rec_hud_title">Cockpit HUD in Video</string>
+    <string name="settings_rec_hud_desc">Overlay speed, throttle &amp; telemetry</string>
+    <string name="settings_rec_audio_title">Audio / Microphone</string>
+    <string name="settings_rec_audio_desc">Record phone microphone audio</string>
+    <string name="settings_rec_storage">Storage: Movies/MK_Live (visible in gallery)</string>
+    <string name="settings_vr_title">VR COCKPIT (QUEST 3 / SBS):</string>
+    <string name="settings_vr_toggle">Stereoscopic VR 3D Mode</string>
+    <string name="settings_vr_desc">Side-by-Side FPV with live Gyro Horizon</string>
+    <string name="settings_language_title">LANGUAGE / SPRACHE:</string>
+    <string name="settings_cancel">Cancel</string>
+    <string name="settings_save">Save &amp; Connect</string>
+
+    <!-- Pairing Dialog -->
+    <string name="pairing_title">MARIO KART PAIRING</string>
+    <string name="pairing_hold_qr">HOLD MARIO KART 15–20 CM IN FRONT OF QR CODE</string>
+    <string name="pairing_tap_close">(Tap to close)</string>
+    <string name="pairing_loading">Loading...</string>
+    <string name="pairing_starting_ap">Starting AP...</string>
+    <string name="pairing_ap_ready">● AP READY: %1$s</string>
+    <string name="pairing_ap_init">○ INITIALIZING AP (CH %1$d)...</string>
+    <string name="pairing_step1">1. Turn on Mario Kart (unplug USB cable)</string>
+    <string name="pairing_step2">2. Hold camera 15–20 cm in front of QR code</string>
+    <string name="pairing_step3">3. Blue LED stays solid on success</string>
+    <string name="pairing_channel_info">AP SSID: %1$s\nChannel: %2$s</string>
+    <string name="pairing_fullscreen">FULLSCREEN</string>
+    <string name="pairing_close">Close</string>
+    <string name="pairing_new_code">New Code</string>
+
+    <!-- Toasts -->
+    <string name="toast_rec_saved">Recording saved: %1$s</string>
+    <string name="toast_rec_started">Recording started (HUD Overlay active)</string>
+    <string name="toast_rec_error">Recording error!</string>
 </resources>

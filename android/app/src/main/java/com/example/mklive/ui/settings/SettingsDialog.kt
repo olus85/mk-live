@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -28,12 +29,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.mklive.R
 import com.example.mklive.model.VideoStreamMode
 
 @Composable
@@ -42,8 +45,12 @@ fun SettingsDialog(
     currentVideoMode: VideoStreamMode,
     isRecordingOverlay: Boolean,
     isRecordingAudio: Boolean,
+    isVrMode: Boolean,
+    currentLanguage: String,
     onSetRecordingOverlay: (Boolean) -> Unit,
     onSetRecordingAudio: (Boolean) -> Unit,
+    onSetVrMode: (Boolean) -> Unit,
+    onSetLanguage: (String) -> Unit,
     onSave: (hostIp: String, videoMode: VideoStreamMode) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -51,6 +58,8 @@ fun SettingsDialog(
     var videoMode by remember { mutableStateOf(currentVideoMode) }
     var recordOverlay by remember { mutableStateOf(isRecordingOverlay) }
     var recordAudio by remember { mutableStateOf(isRecordingAudio) }
+    var vrMode by remember { mutableStateOf(isVrMode) }
+    var selectedLang by remember { mutableStateOf(currentLanguage) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -61,12 +70,12 @@ fun SettingsDialog(
             color = Color(0xFF1E262C),
             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF37474F)),
             modifier = Modifier
-                .width(660.dp)
+                .width(680.dp)
                 .padding(8.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(14.dp)
                     .fillMaxWidth()
             ) {
                 // Header
@@ -76,56 +85,72 @@ fun SettingsDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "COCKPIT & BASE STATION SETTINGS",
+                        text = stringResource(R.string.settings_title),
                         color = Color(0xFF00E5FF),
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace
                     )
 
-                    Surface(
-                        color = Color(0x3300E5FF),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = "PC BASE STATION",
-                            color = Color(0xFF00E5FF),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Surface(
+                            color = Color(0x3300E5FF),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_tag_pc),
+                                color = Color(0xFF00E5FF),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+
+                        Surface(
+                            color = Color(0x337C4DFF),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_tag_quest),
+                                color = Color(0xFFB388FF),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // 2-Column Compact Landscape Layout (Fits perfectly on screen)
+                // 2-Column Compact Layout
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    // LEFT COLUMN: PC Base Station IP & Video Mode
+                    // LEFT COLUMN: Base Station IP, Video Mode & VR Mode
                     Column(
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         // Section: Base Station IP
                         Column {
                             Text(
-                                text = "BASE STATION IP ADDRESS:",
+                                text = stringResource(R.string.settings_base_ip),
                                 color = Color.White,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(3.dp))
                             OutlinedTextField(
                                 value = hostIp,
                                 onValueChange = { hostIp = it },
                                 singleLine = true,
                                 textStyle = androidx.compose.ui.text.TextStyle(
-                                    fontSize = 13.sp,
+                                    fontSize = 12.sp,
                                     fontFamily = FontFamily.Monospace,
                                     color = Color(0xFF00E5FF)
                                 ),
@@ -135,20 +160,20 @@ fun SettingsDialog(
                                     focusedContainerColor = Color(0xFF141A1E),
                                     unfocusedContainerColor = Color(0xFF141A1E)
                                 ),
-                                modifier = Modifier.fillMaxWidth().height(48.dp)
+                                modifier = Modifier.fillMaxWidth().height(46.dp)
                             )
                         }
 
                         // Section: Video Mode
                         Column {
                             Text(
-                                text = "VIDEO STREAMING MODE:",
+                                text = stringResource(R.string.settings_video_mode),
                                 color = Color.White,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(3.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -159,11 +184,11 @@ fun SettingsDialog(
                                         containerColor = if (videoMode == VideoStreamMode.H264_MEDIACODEC) Color(0xFF00B0FF) else Color(0x3337474F)
                                     ),
                                     shape = RoundedCornerShape(4.dp),
-                                    modifier = Modifier.weight(1f).height(34.dp)
+                                    modifier = Modifier.weight(1f).height(32.dp)
                                 ) {
                                     Text(
-                                        "H.264 (Low Latency)",
-                                        fontSize = 10.sp,
+                                        stringResource(R.string.settings_h264_label),
+                                        fontSize = 9.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (videoMode == VideoStreamMode.H264_MEDIACODEC) Color.White else Color(0xFFCFD8DC)
                                     )
@@ -175,28 +200,60 @@ fun SettingsDialog(
                                         containerColor = if (videoMode == VideoStreamMode.MJPEG_STREAM) Color(0xFF00B0FF) else Color(0x3337474F)
                                     ),
                                     shape = RoundedCornerShape(4.dp),
-                                    modifier = Modifier.weight(1f).height(34.dp)
+                                    modifier = Modifier.weight(1f).height(32.dp)
                                 ) {
                                     Text(
-                                        "MJPEG (Universal)",
-                                        fontSize = 10.sp,
+                                        stringResource(R.string.settings_mjpeg_label),
+                                        fontSize = 9.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (videoMode == VideoStreamMode.MJPEG_STREAM) Color.White else Color(0xFFCFD8DC)
                                     )
                                 }
                             }
                         }
+
+                        // Section: VR & Meta Quest 3 Mode
+                        Surface(
+                            color = Color(0xFF141A1E),
+                            shape = RoundedCornerShape(6.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, if (vrMode) Color(0xFF7C4DFF) else Color(0x2237474F)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(stringResource(R.string.settings_vr_toggle), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.settings_vr_desc), color = Color(0xFFB388FF), fontSize = 8.sp)
+                                }
+                                Switch(
+                                    checked = vrMode,
+                                    onCheckedChange = {
+                                        vrMode = it
+                                        onSetVrMode(it)
+                                    },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = Color(0xFFB388FF),
+                                        checkedTrackColor = Color(0x667C4DFF)
+                                    )
+                                )
+                            }
+                        }
                     }
 
-                    // RIGHT COLUMN: Video Recording Options
+                    // RIGHT COLUMN: Recording Options & Language
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "RECORDING SETTINGS:",
+                            text = stringResource(R.string.settings_rec_title),
                             color = Color.White,
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace
                         )
@@ -210,13 +267,13 @@ fun SettingsDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("Cockpit HUD in Video", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text("Overlay speed, throttle & telemetry", color = Color(0xFF78909C), fontSize = 9.sp)
+                                    Text(stringResource(R.string.settings_rec_hud_title), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.settings_rec_hud_desc), color = Color(0xFF78909C), fontSize = 8.sp)
                                 }
                                 Switch(
                                     checked = recordOverlay,
@@ -241,13 +298,13 @@ fun SettingsDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("Audio / Microphone", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text("Record phone microphone audio", color = Color(0xFF78909C), fontSize = 9.sp)
+                                    Text(stringResource(R.string.settings_rec_audio_title), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.settings_rec_audio_desc), color = Color(0xFF78909C), fontSize = 8.sp)
                                 }
                                 Switch(
                                     checked = recordAudio,
@@ -263,17 +320,48 @@ fun SettingsDialog(
                             }
                         }
 
-                        // Storage location info
-                        Text(
-                            text = "Storage: Movies/MK_Live (visible in gallery)",
-                            color = Color(0xFF90A4AE),
-                            fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace
-                        )
+                        // Section: Language Selection
+                        Column {
+                            Text(
+                                text = stringResource(R.string.settings_language_title),
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                val languages = listOf("system" to "SYSTEM", "de" to "DEUTSCH", "en" to "ENGLISH")
+                                languages.forEach { (code, label) ->
+                                    val isSelected = selectedLang == code
+                                    Button(
+                                        onClick = {
+                                            selectedLang = code
+                                            onSetLanguage(code)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isSelected) Color(0xFF00B0FF) else Color(0x3337474F)
+                                        ),
+                                        shape = RoundedCornerShape(4.dp),
+                                        modifier = Modifier.weight(1f).height(30.dp)
+                                    ) {
+                                        Text(
+                                            label,
+                                            fontSize = 9.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) Color.White else Color(0xFFCFD8DC)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Footer Buttons
                 Row(
@@ -284,9 +372,9 @@ fun SettingsDialog(
                         onClick = onDismiss,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0x3337474F)),
                         shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.height(36.dp)
+                        modifier = Modifier.height(34.dp)
                     ) {
-                        Text("Cancel", fontSize = 11.sp, color = Color(0xFFCFD8DC))
+                        Text(stringResource(R.string.settings_cancel), fontSize = 11.sp, color = Color(0xFFCFD8DC))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
@@ -296,9 +384,9 @@ fun SettingsDialog(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
                         shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.height(36.dp)
+                        modifier = Modifier.height(34.dp)
                     ) {
-                        Text("Save & Connect", color = Color(0xFF00222A), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.settings_save), color = Color(0xFF00222A), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
