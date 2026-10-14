@@ -6,9 +6,12 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-QUEST_APK="$PROJECT_ROOT/MK-Live-Cockpit-v1.1.0-Quest3.apk"
+QUEST_APK="$PROJECT_ROOT/MK-Live-Cockpit-v2.0.0-Quest3.apk"
 
 # Fallback to general apk if specific one not found
+if [ ! -f "$QUEST_APK" ]; then
+    QUEST_APK="$PROJECT_ROOT/MK-Live-Cockpit-v1.1.0-Quest3.apk"
+fi
 if [ ! -f "$QUEST_APK" ]; then
     QUEST_APK="$PROJECT_ROOT/android/app/build/outputs/apk/quest/release/app-quest-release.apk"
 fi

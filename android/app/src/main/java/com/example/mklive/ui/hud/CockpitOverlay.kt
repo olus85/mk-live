@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mklive.R
+import com.example.mklive.combat.WeaponType
 import com.example.mklive.model.DriveCommand
 import com.example.mklive.model.ImuSnapshot
 import com.example.mklive.model.KartDeviceInfo
@@ -45,8 +47,17 @@ fun CockpitOverlay(
     driveCommand: DriveCommand,
     imuSnapshot: ImuSnapshot,
     inputSource: String,
+    coins: Int = 0,
+    currentLap: Int = 1,
+    activeWeapon: WeaponType = WeaponType.MINIGUN,
+    ammo: Int = 99,
+    isRouletteActive: Boolean = false,
+    rouletteItem: WeaponType = WeaponType.NONE,
     isRecording: Boolean = false,
     recordingDurationSec: Int = 0,
+    onFireWeapon: () -> Unit = {},
+    onCycleWeapon: () -> Unit = {},
+    onDropGate: () -> Unit = {},
     onRecordToggle: () -> Unit,
     onPairClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
@@ -105,6 +116,76 @@ fun CockpitOverlay(
                     batteryLevel = kartInfo.battery ?: 0,
                     isCableConnected = kartInfo.cable == true
                 )
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Coins Chip
+                Surface(
+                    color = Color(0xCC000000),
+                    shape = RoundedCornerShape(4.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD54F))
+                ) {
+                    Text(
+                        text = "🪙 x${"%02d".format(coins)}",
+                        color = Color(0xFFFFD54F),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(5.dp))
+
+                // Lap Chip
+                Surface(
+                    color = Color(0xCC000000),
+                    shape = RoundedCornerShape(4.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E5FF))
+                ) {
+                    Text(
+                        text = "🏁 LAP $currentLap/3",
+                        color = Color(0xFF00E5FF),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(5.dp))
+
+                // Active Item / Roulette Button
+                val itemLabel = if (isRouletteActive) "🎰 ${rouletteItem.icon}" else "${activeWeapon.icon} ${activeWeapon.displayName} (${ammo})"
+                Button(
+                    onClick = onFireWeapon,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isRouletteActive) Color(0xFFFF9100) else Color(0xCCFF1744)
+                    ),
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text(itemLabel, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+                Spacer(modifier = Modifier.width(5.dp))
+
+                // Cycle Weapon Button
+                Button(
+                    onClick = onCycleWeapon,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0x5537474F)),
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text("🔄", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.width(5.dp))
+
+                // Drop Checkpoint Gate Button
+                Button(
+                    onClick = onDropGate,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text("🚩 +TOR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
             }
 
             // Actions: VR Toggle, Record, Pair Kart & Settings

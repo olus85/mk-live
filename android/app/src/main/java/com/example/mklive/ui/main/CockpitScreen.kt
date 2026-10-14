@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.example.mklive.ar.ArOverlayView
 import com.example.mklive.model.VideoStreamMode
 import com.example.mklive.ui.controller.VirtualTouchOverlay
 import com.example.mklive.ui.hud.CockpitOverlay
@@ -44,6 +45,21 @@ fun CockpitScreen(
     val recordingDurationSec by viewModel.recordingDurationSec.collectAsState()
     val recordOverlayEnabled by viewModel.recordOverlayEnabled.collectAsState()
     val recordAudioEnabled by viewModel.recordAudioEnabled.collectAsState()
+    val recordColorSwapEnabled by viewModel.recordColorSwapEnabled.collectAsState()
+
+    // AR & Combat states
+    val arEnabled by viewModel.arEnabled.collectAsState()
+    val sfxEnabled by viewModel.sfxEnabled.collectAsState()
+    val engineSoundEnabled by viewModel.engineSoundEnabled.collectAsState()
+
+    val coins by viewModel.arEngine.coinsCollected.collectAsState()
+    val currentLap by viewModel.arEngine.currentLap.collectAsState()
+    val activeWeapon by viewModel.arEngine.combatManager.activeWeapon.collectAsState()
+    val ammo by viewModel.arEngine.combatManager.ammo.collectAsState()
+    val isRouletteActive by viewModel.arEngine.combatManager.isRouletteActive.collectAsState()
+    val rouletteItem by viewModel.arEngine.combatManager.rouletteItem.collectAsState()
+    val lockTarget by viewModel.arEngine.combatManager.lockOnTarget.collectAsState()
+    val isMinigunFiring by viewModel.arEngine.combatManager.isMinigunFiring.collectAsState()
 
     val h264Fps by viewModel.h264Player.fps.collectAsState()
     val isH264Connected by viewModel.h264Player.isConnected.collectAsState()
@@ -68,7 +84,7 @@ fun CockpitScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         if (isVrMode) {
-            // META QUEST 3 & VR HEADSET SBS 3D COCKPIT
+            // META QUEST 3 & VR HEADSET SBS 3D COCKPIT WITH STEREOSCOPIC AR
             VrCockpitView(
                 videoMode = videoMode,
                 h264Player = viewModel.h264Player,
@@ -82,6 +98,12 @@ fun CockpitScreen(
                 isRecording = isRecording,
                 recordingDurationSec = recordingDurationSec,
                 inputSource = inputSource,
+                arEngine = viewModel.arEngine,
+                coins = coins,
+                currentLap = currentLap,
+                activeWeapon = activeWeapon,
+                lockTarget = lockTarget,
+                isMinigunFiring = isMinigunFiring,
                 onToggleVr = { viewModel.toggleVrMode() },
                 modifier = Modifier.fillMaxSize()
             )
@@ -96,7 +118,21 @@ fun CockpitScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // 2. VIRTUAL TOUCH CONTROLLER (Auto-hides on external gamepad)
+            // 2. 🌟 AUGMENTED REALITY LAYER (Coins, ?-Boxes, Dash-Pads, Projectiles & Crosshairs)
+            if (arEnabled) {
+                ArOverlayView(
+                    arEngine = viewModel.arEngine,
+                    pitchDeg = imuSnapshot.pitchDeg,
+                    rollDeg = imuSnapshot.rollDeg,
+                    isLeftEye = null,
+                    activeWeapon = activeWeapon,
+                    lockTarget = lockTarget,
+                    isMinigunFiring = isMinigunFiring,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // 3. VIRTUAL TOUCH CONTROLLER (Auto-hides on external gamepad)
             VirtualTouchOverlay(
                 isGamepadActive = isGamepadActive,
                 onDriveCommand = { t, s, b, _ ->
@@ -105,7 +141,7 @@ fun CockpitScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // 3. COCKPIT INSTRUMENTS, HUD OVERLAY & TOP BAR
+            // 4. COCKPIT INSTRUMENTS, HUD OVERLAY, AR STATS & ACTIONS
             CockpitOverlay(
                 openKartState = openKartState,
                 kartInfo = kartInfo,
@@ -113,8 +149,17 @@ fun CockpitScreen(
                 driveCommand = currentCommand,
                 imuSnapshot = imuSnapshot,
                 inputSource = inputSource,
+                coins = coins,
+                currentLap = currentLap,
+                activeWeapon = activeWeapon,
+                ammo = ammo,
+                isRouletteActive = isRouletteActive,
+                rouletteItem = rouletteItem,
                 isRecording = isRecording,
                 recordingDurationSec = recordingDurationSec,
+                onFireWeapon = { viewModel.useActiveItem() },
+                onCycleWeapon = { viewModel.cycleWeapon() },
+                onDropGate = { viewModel.addVirtualGate() },
                 onRecordToggle = { viewModel.toggleRecording(context) },
                 onPairClicked = { viewModel.openPairing() },
                 onSettingsClicked = { viewModel.openSettings() },
@@ -124,7 +169,7 @@ fun CockpitScreen(
             )
         }
 
-        // 4. PAIRING DIALOG
+        // 5. PAIRING DIALOG
         if (showPairingDialog) {
             PairingDialog(
                 serverQrBitmap = serverQrBitmap,
@@ -136,17 +181,25 @@ fun CockpitScreen(
             )
         }
 
-        // 5. SETTINGS DIALOG
+        // 6. SETTINGS DIALOG
         if (showSettingsDialog) {
             SettingsDialog(
                 currentHostIp = hostIp,
                 currentVideoMode = videoMode,
                 isRecordingOverlay = recordOverlayEnabled,
                 isRecordingAudio = recordAudioEnabled,
+                isRecordingColorSwap = recordColorSwapEnabled,
+                isArEnabled = arEnabled,
+                isSfxEnabled = sfxEnabled,
+                isEngineSoundEnabled = engineSoundEnabled,
                 isVrMode = isVrMode,
                 currentLanguage = currentLanguage,
                 onSetRecordingOverlay = { viewModel.setRecordingOverlay(it) },
                 onSetRecordingAudio = { viewModel.setRecordingAudio(it) },
+                onSetRecordingColorSwap = { viewModel.setRecordingColorSwap(it) },
+                onSetArEnabled = { viewModel.setArEnabled(it) },
+                onSetSfxEnabled = { viewModel.setSfxEnabled(it) },
+                onSetEngineSoundEnabled = { viewModel.setEngineSoundEnabled(it) },
                 onSetVrMode = { viewModel.setVrMode(it) },
                 onSetLanguage = { viewModel.setLanguage(context, it) },
                 onSave = { newIp, newMode ->

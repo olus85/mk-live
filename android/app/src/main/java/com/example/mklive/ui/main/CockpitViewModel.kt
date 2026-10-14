@@ -8,6 +8,10 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mklive.R
+import com.example.mklive.ar.ArEngine
+import com.example.mklive.audio.EngineSoundSynthesizer
+import com.example.mklive.audio.SoundManager
+import com.example.mklive.combat.WeaponType
 import com.example.mklive.model.DriveCommand
 import com.example.mklive.model.ImuSnapshot
 import com.example.mklive.model.KartDeviceInfo
@@ -45,6 +49,13 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     val mjpegPlayer = MjpegPlayer(repository.client)
     val videoRecorder = VideoRecorder()
 
+    // 🌟 Sound & Audio Engine
+    val soundManager = SoundManager(application)
+    val engineSynthesizer = EngineSoundSynthesizer(soundManager)
+
+    // 🌟 Augmented Reality & Combat Engine
+    val arEngine = ArEngine(soundManager, viewModelScope)
+
     // Host IP: default to PC Base Station (192.168.0.105)
     private val _hostIp = MutableStateFlow(prefs.getString("base_station_ip", "192.168.0.105") ?: "192.168.0.105")
     val hostIp: StateFlow<String> = _hostIp.asStateFlow()
@@ -60,6 +71,19 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
 
     private val _recordAudioEnabled = MutableStateFlow(prefs.getBoolean("rec_audio", false))
     val recordAudioEnabled: StateFlow<Boolean> = _recordAudioEnabled.asStateFlow()
+
+    private val _recordColorSwapEnabled = MutableStateFlow(prefs.getBoolean("rec_color_swap", true))
+    val recordColorSwapEnabled: StateFlow<Boolean> = _recordColorSwapEnabled.asStateFlow()
+
+    // AR & Audio configuration
+    private val _arEnabled = MutableStateFlow(prefs.getBoolean("ar_enabled", true))
+    val arEnabled: StateFlow<Boolean> = _arEnabled.asStateFlow()
+
+    private val _sfxEnabled = MutableStateFlow(prefs.getBoolean("sfx_enabled", true))
+    val sfxEnabled: StateFlow<Boolean> = _sfxEnabled.asStateFlow()
+
+    private val _engineSoundEnabled = MutableStateFlow(prefs.getBoolean("engine_sound_enabled", true))
+    val engineSoundEnabled: StateFlow<Boolean> = _engineSoundEnabled.asStateFlow()
 
     val isRecording: StateFlow<Boolean> = videoRecorder.isRecording
     val recordingDurationSec: StateFlow<Int> = videoRecorder.durationSec
@@ -99,6 +123,88 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     private val _currentLanguage = MutableStateFlow(prefs.getString("app_language", "system") ?: "system")
     val currentLanguage: StateFlow<String> = _currentLanguage.asStateFlow()
 
+    private var pollJob: Job? = null
+    private var arUpdateJob: Job? = null
+    private var wsDriveSocket: WebSocket? = null
+    private var lastGamepadInputTime = 0L
+
+    init {
+        // Initialize sound settings
+        soundManager.isSfxEnabled = _sfxEnabled.value
+        soundManager.isEngineSoundEnabled = _engineSoundEnabled.value
+        arEngine.isArEnabled = _arEnabled.value
+        videoRecorder.isColorSwapEnabled = _recordColorSwapEnabled.value
+
+        // Start dynamic engine sound loop
+        engineSynthesizer.start(viewModelScope)
+
+        // Connect frame callback from MJPEG player to video recorder
+        mjpegPlayer.onFrameAvailable = { bitmap ->
+            if (videoRecorder.isRecording.value) {
+                val cmd = _currentCommand.value
+                val info = kartInfo.value
+                val imu = imuSnapshot.value
+                val overlay = RecordingOverlayInfo(
+                    throttle = cmd.throttle,
+                    steering = cmd.steering,
+                    isBraking = cmd.brake,
+                    batteryPct = info.battery ?: 100,
+                    character = info.character ?: "Mario",
+                    speedKmh = (cmd.throttle.coerceAtLeast(0) * 15 / 127),
+                    headingDeg = imu.headingDeg,
+                    coins = arEngine.coinsCollected.value,
+                    lap = arEngine.currentLap.value,
+                    activeWeapon = arEngine.combatManager.activeWeapon.value.displayName
+                )
+                videoRecorder.recordFrame(bitmap, overlay) { canvas ->
+                    if (arEngine.isArEnabled) {
+                        arEngine.render(canvas, 1280f, 720f, imu.pitchDeg, imu.rollDeg)
+                    }
+                }
+            }
+        }
+
+        // Continuous ~30 Hz AR simulation loop
+        arUpdateJob = viewModelScope.launch(Dispatchers.Default) {
+            var lastTick = System.currentTimeMillis()
+            while (isActive) {
+                delay(33) // ~30 Hz
+                val now = System.currentTimeMillis()
+                val dt = ((now - lastTick).coerceIn(1, 100) / 1000f)
+                lastTick = now
+
+                val cmd = _currentCommand.value
+                val imu = imuSnapshot.value
+
+                arEngine.update(
+                    dt = dt,
+                    throttle = cmd.throttle,
+                    steering = cmd.steering,
+                    brake = cmd.brake,
+                    pitchDeg = imu.pitchDeg,
+                    rollDeg = imu.rollDeg,
+                    yawRateDegS = imu.yawRateDegS,
+                    headingDeg = imu.headingDeg
+                )
+            }
+        }
+
+        // Start drive loop and connect to base station
+        teleoperation.startDriveLoop(viewModelScope)
+        connectAll()
+
+        // Gamepad idle timer: revert to touch after 5000 ms of no gamepad input
+        viewModelScope.launch(Dispatchers.Default) {
+            while (isActive) {
+                delay(1000)
+                if (_isGamepadActive.value && System.currentTimeMillis() - lastGamepadInputTime > 5000) {
+                    _isGamepadActive.value = false
+                    _inputSource.value = "Touch"
+                }
+            }
+        }
+    }
+
     fun openSettings() {
         _isSettingsOpen.value = true
     }
@@ -128,46 +234,6 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     fun setLanguage(context: Context, langCode: String) {
         _currentLanguage.value = langCode
         com.example.mklive.util.LocaleHelper.setLanguage(context, langCode)
-    }
-
-    private var pollJob: Job? = null
-    private var wsDriveSocket: WebSocket? = null
-    private var lastGamepadInputTime = 0L
-
-    init {
-        // Connect frame callback from MJPEG player to video recorder
-        mjpegPlayer.onFrameAvailable = { bitmap ->
-            if (videoRecorder.isRecording.value) {
-                val cmd = _currentCommand.value
-                val info = kartInfo.value
-                val imu = imuSnapshot.value
-                val overlay = RecordingOverlayInfo(
-                    throttle = cmd.throttle,
-                    steering = cmd.steering,
-                    isBraking = cmd.brake,
-                    batteryPct = info.battery ?: 100,
-                    character = info.character ?: "Mario",
-                    speedKmh = (cmd.throttle.coerceAtLeast(0) * 15 / 127),
-                    headingDeg = imu.headingDeg
-                )
-                videoRecorder.recordFrame(bitmap, overlay)
-            }
-        }
-
-        // Start drive loop and connect to base station
-        teleoperation.startDriveLoop(viewModelScope)
-        connectAll()
-
-        // Gamepad idle timer: revert to touch after 5000 ms of no gamepad input
-        viewModelScope.launch(Dispatchers.Default) {
-            while (isActive) {
-                delay(1000)
-                if (_isGamepadActive.value && System.currentTimeMillis() - lastGamepadInputTime > 5000) {
-                    _isGamepadActive.value = false
-                    _inputSource.value = "Touch"
-                }
-            }
-        }
     }
 
     fun connectAll() {
@@ -233,7 +299,6 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
             VideoStreamMode.H264_MEDIACODEC -> {
                 val wsUrl = "ws://$ip:9001/video.ws"
                 h264Player.start(wsUrl, viewModelScope)
-                // Also run mjpeg in background if recording is enabled
                 val mjpegUrl = "http://$ip:9001/video.mjpg"
                 mjpegPlayer.start(mjpegUrl, viewModelScope)
             }
@@ -248,15 +313,64 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
         lastGamepadInputTime = System.currentTimeMillis()
         _isGamepadActive.value = true
         _inputSource.value = padName
-        _currentCommand.value = DriveCommand(throttle, steering, brake, padName)
-        teleoperation.submitCommand(throttle, steering, brake, padName)
+
+        // Apply AR buffs (Dash Pad 100% boost, Coin speed multiplier, Banana spin cut)
+        var effThrottle = throttle
+        if (arEngine.isSpinningOut.value) {
+            effThrottle = 0 // Spin-out engine cut
+        } else if (arEngine.isBoostActive.value) {
+            effThrottle = 127 // 100% Nitro Boost
+        } else if (effThrottle > 0 && arEngine.coinsCollected.value > 0) {
+            // +1.5% max speed per coin
+            val buff = 1.0f + (arEngine.coinsCollected.value * 0.015f)
+            effThrottle = (effThrottle * buff).toInt().coerceIn(0, 127)
+        }
+
+        _currentCommand.value = DriveCommand(effThrottle, steering, brake, padName)
+        teleoperation.submitCommand(effThrottle, steering, brake, padName)
+        engineSynthesizer.updateTelemetry(effThrottle, brake, arEngine.isBoostActive.value)
     }
 
     fun handleTouchInput(throttle: Int, steering: Int, brake: Boolean) {
         if (!_isGamepadActive.value) {
             _inputSource.value = "Touch"
-            _currentCommand.value = DriveCommand(throttle, steering, brake, "touch")
-            teleoperation.submitCommand(throttle, steering, brake, "touch")
+            var effThrottle = throttle
+            if (arEngine.isSpinningOut.value) {
+                effThrottle = 0
+            } else if (arEngine.isBoostActive.value) {
+                effThrottle = 127
+            } else if (effThrottle > 0 && arEngine.coinsCollected.value > 0) {
+                val buff = 1.0f + (arEngine.coinsCollected.value * 0.015f)
+                effThrottle = (effThrottle * buff).toInt().coerceIn(0, 127)
+            }
+
+            _currentCommand.value = DriveCommand(effThrottle, steering, brake, "touch")
+            teleoperation.submitCommand(effThrottle, steering, brake, "touch")
+            engineSynthesizer.updateTelemetry(effThrottle, brake, arEngine.isBoostActive.value)
+        }
+    }
+
+    // 🌟 Combat & Weapon Methods
+    fun startMinigun() = arEngine.combatManager.startMinigun(viewModelScope)
+    fun stopMinigun() = arEngine.combatManager.stopMinigun()
+    fun fireRocket() = arEngine.combatManager.fireRocket()
+    fun dropBanana() = arEngine.combatManager.dropBanana()
+    fun throwBobomb() = arEngine.combatManager.throwBobomb()
+    fun useBoost() = arEngine.combatManager.useBoost()
+    fun cycleWeapon() = arEngine.combatManager.cycleWeapon()
+    fun addVirtualGate() = arEngine.addVirtualGate()
+
+    fun useActiveItem() {
+        when (arEngine.combatManager.activeWeapon.value) {
+            WeaponType.ROCKET -> fireRocket()
+            WeaponType.BANANA -> dropBanana()
+            WeaponType.BOBOMB -> throwBobomb()
+            WeaponType.MUSHROOM_BOOST -> useBoost()
+            WeaponType.GREEN_SHELL -> fireRocket()
+            WeaponType.MINIGUN -> {
+                if (arEngine.combatManager.isMinigunFiring.value) stopMinigun() else startMinigun()
+            }
+            WeaponType.NONE -> cycleWeapon()
         }
     }
 
@@ -290,12 +404,15 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
             }
         } else {
-            // Ensure mjpeg stream is running to supply frames for recorder
             val ip = _hostIp.value
             if (!mjpegPlayer.isConnected.value) {
                 mjpegPlayer.start("http://$ip:9001/video.mjpg", viewModelScope)
             }
-            val ok = videoRecorder.startRecording(context, recordOverlay = _recordOverlayEnabled.value)
+            val ok = videoRecorder.startRecording(
+                context,
+                recordOverlay = _recordOverlayEnabled.value,
+                colorSwap = _recordColorSwapEnabled.value
+            )
             if (ok) {
                 val msg = context.getString(R.string.toast_rec_started)
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -314,6 +431,30 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     fun setRecordingAudio(enabled: Boolean) {
         _recordAudioEnabled.value = enabled
         prefs.edit().putBoolean("rec_audio", enabled).apply()
+    }
+
+    fun setRecordingColorSwap(enabled: Boolean) {
+        _recordColorSwapEnabled.value = enabled
+        videoRecorder.isColorSwapEnabled = enabled
+        prefs.edit().putBoolean("rec_color_swap", enabled).apply()
+    }
+
+    fun setArEnabled(enabled: Boolean) {
+        _arEnabled.value = enabled
+        arEngine.isArEnabled = enabled
+        prefs.edit().putBoolean("ar_enabled", enabled).apply()
+    }
+
+    fun setSfxEnabled(enabled: Boolean) {
+        _sfxEnabled.value = enabled
+        soundManager.isSfxEnabled = enabled
+        prefs.edit().putBoolean("sfx_enabled", enabled).apply()
+    }
+
+    fun setEngineSoundEnabled(enabled: Boolean) {
+        _engineSoundEnabled.value = enabled
+        soundManager.isEngineSoundEnabled = enabled
+        prefs.edit().putBoolean("engine_sound_enabled", enabled).apply()
     }
 
     fun saveSettings(newIp: String, newMode: VideoStreamMode) {
@@ -336,6 +477,9 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     override fun onCleared() {
         super.onCleared()
         pollJob?.cancel()
+        arUpdateJob?.cancel()
+        engineSynthesizer.stop()
+        soundManager.release()
         teleoperation.stop()
         telemetry.stop()
         h264Player.stop()

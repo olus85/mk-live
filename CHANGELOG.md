@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2026-10-14
+
+### Added
+* **🏎️💨 Augmented Reality (AR) Core Engine (Killer Feature):**
+  * **3D Perspective & Ground Projection (Homography):** Physical camera geometry ($h = 4.5\text{ cm}$, fixed tilt $\theta = 8^\circ$, $82^\circ \text{H-FOV} \times 52^\circ \text{V-FOV}$) coupled with real-time IMU gyroscopic pitch and roll telemetry.
+  * **Interactive Gold Coins:** 3D spinning and bobbing golden coins floating above the carpet/floor. Collecting gives the iconic Mario "Cha-Ching!" chime, particle star explosion, increments coin counter (`x07 / 10`), and applies a +1.5% speed buff per coin (up to +15% top speed).
+  * **Holographic ?-Item Boxes:** Translucent pulsating yellow/orange 3D cubes hovering on the track. Driving through shatters the cube into 16 crystalline fragments and triggers the Item Roulette.
+  * **Turbo Boost Dash Pads:** Flowing neon-cyan and red directional chevrons on the floor that ignite an instant 100% Nitro Boost with visual motion blur speed lines and jet turbine sound.
+  * **Virtual Track Gates & Lap Timing:** Interactive checkpoint archways with banners (`🚩 GATE 1..4` and `🏁 FINISH / LAP`). Set virtual gates anywhere on the floor with D-Pad UP or the HUD button, complete with real-time lap timer, lap counting (3 Laps GP), and best lap records.
+  * **Odometry & Dead Reckoning Tracker:** Integrates throttle, steering, and gyro yaw rate to continuously track relative positions and perform sub-10ms collision detection.
+* **⚔️ Combat Arsenal & Weapons System:**
+  * **Minigun / Gatling Gun on [L1 / LB] (Hold):** 18 Hz rapid-fire rotary cannon with alternating bumper muzzle flashes, tracer bullets racing into depth towards the HUD reticle, weapon screen shake, and rumble. Destroys obstacles, pops item boxes, and blows bananas off the track.
+  * **Lock-On Missile Launcher on [X]:** HUD radar crosshair scans forward cone; locks onto track gates and targets with a high-pitched lock-on tone. Launches guided 3D rockets with fiery exhaust trails and detonates with comic explosion sparks, smoke, and rumble.
+  * **Bob-Omb / EMP Shockwave on [Y]:** Deploys high-explosive area-clearing blast that obliterates track obstacles and shakes the viewport.
+  * **Banana Peels on [B]:** Drops banana peels directly behind the kart. Driving over them triggers cartoon slip-and-spin tire squeal and cuts motor power for 1 second.
+  * **Mushroom Boost on [A]:** Triggers 100% nitro acceleration.
+  * **Weapon Select / Horn on [R1 / RB]:** Cycles active weapons or sounds the car horn.
+* **🔊 Low-Latency SoundPool SFX Engine & Dynamic Engine RPM Synthesizer:**
+  * Built-in procedural 16-bit PCM 44.1 kHz sound synthesizer for instant zero-latency playback without external asset dependencies.
+  * Complete SFX matrix: coin chimes, crystalline shatter, roulette tick, victory jingle, minigun ratchet, rocket whoosh, explosion boom, banana drop, slip squeal, turbo roar, horn honk, and start light beeps.
+  * Dynamic frequency-modulated engine sound: synthesizes real-time combustion harmonics, pitch-scaled continuously ($0.8\text{x} \dots 2.2\text{x}$) with kart throttle telemetry and boost state.
+* **🥽 Stereoscopic 3D AR for Meta Quest 3:**
+  * Side-by-Side (SBS) dual-viewport 3D AR rendering with accurate inter-pupillary distance (IPD) retinal disparity. Coins, boxes, and gates appear with tangible 3D depth floating directly in the user's living room.
+* **🛠️ Video Recorder Color Channel Inversion Bugfix:**
+  * Fixed red/blue color swapping (cyan Mario cap) on Google Tensor (Pixel 7 Pro) and Mali/Exynos GPUs using hardware-accelerated Skia `ColorMatrix` R/B channel swapping.
+  * Added setting toggle in Settings Dialog: "Color Channel Fix (RGB/BGR)".
+  * Augmented Reality overlays and combat effects burned directly into recorded MP4 video clips.
+
+---
+
 ## [1.1.0] - 2026-10-11
 
 ### Added

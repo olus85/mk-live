@@ -8,65 +8,47 @@ Transform a Linux PC, Raspberry Pi, or Steam Deck with a Wi-Fi adapter into an a
 
 ## 🌟 Highlights & Key Features
 
-* **🥽 Meta Quest 3 & VR Headset Mode (New!):**
-  * **Stereoscopic 3D Cockpit (SBS):** Immersive dual-viewport rendering with interpupillary distance (IPD) parallax adjustment.
-  * **Dynamic Artificial Horizon:** Gyroscopic attitude indicator responding in real-time to kart pitch and roll telemetry.
-  * **Meta Touch Plus Controller Support:** Drive naturally with trigger throttle, analog steering, grip braking, boost buttons, and haptic feedback.
-  * **Dedicated Quest App Flavor:** Features a custom 3D Mario icon wearing a Meta Quest 3 VR headset, Oculus manifest declarations (`com.oculus.intent.category.VR`, 1920x1080 panel), and hand tracking support.
-  * **One-Click VR Toggle:** Seamlessly switch between flat cinema panel and immersive VR mode anytime via button **[Y]** or HUD toggle.
-
-* **🌍 Bilingual Localization (English & German):**
-  * Full in-app language switching between German (Deutsch) and English.
-  * Automatic detection of system language with manual override in Settings.
-
-* **📱 Native Android Cockpit App:**
-  * Ultra-low latency FPV camera stream (H.264 hardware decoding & MJPEG fallback).
-  * Modern, compact landscape HUD optimized for gaming smartphones and VR displays.
-  * Real-time telemetry: Speedometer, throttle indicator, boost gauge, steering angle, G-Meter, compass ribbon, and battery voltage.
-  * Safe gamepad navigation (B-button won't accidentally exit the app).
-  * Fine throttle control via R2 trigger (0–70% for precision driving) and 100% Boost via A / X button.
-  * Continuous 30 Hz keep-alive stream preventing the kart's 1.8s deadman emergency brake.
-
-* **🔴 Live HUD Video Recording:**
-  * Hardware-accelerated H.264 video encoding (`MediaCodec` & `MediaMuxer` at 1280x720 @ 30 FPS).
-  * Telemetry overlay burned directly into the video: Speedometer, throttle/boost bars, steering angle, battery, timestamp, and recording timer.
-  * Instant Android Gallery / Google Photos integration (`Movies/MK_Live`).
-  * Configurable options: HUD overlay toggle and smartphone microphone audio recording.
-
-* **🖥️ Robust PC Base Station:**
-  * Automated systemd services for Wi-Fi access point, H.264 reassembly worker, and WebSocket teleoperation server.
-  * Desktop starter shortcut (`Start_Basis_Station.desktop`) and one-click control script (`start_basis_station.sh`).
-  * Wi-Fi transmission power optimized (20 dBm / 100 mW EIRP, ETSI/DE) for maximum range and stability.
-  * QR code and one-click pairing support.
+* **🏎️💨 AR Combat Edition & Virtual Circuit Engine (New in v2.0.0!):**
+  * **3D Floor Homography & Ground Projection:** Real-world camera geometry coupled with real-time IMU gyroscopic pitch and roll telemetry.
+  * **Interactive Gold Coins:** Rotating 3D gold coins floating on the floor. Driving over them rewards the iconic chime, glitter starbursts, coin counter increments, and a +1.5% speed buff per coin (up to +15% top speed).
+  * **Holographic ?-Item Boxes:** Pulsating 3D question-mark cubes that shatter into 16 crystalline shards and trigger the Item Roulette.
+  * **Turbo Boost Dash Pads:** Flowing neon chevron arrows on the carpet delivering an instant 100% Nitro Boost with camera speed blur lines.
+  * **Virtual Track Gates & Lap Timing:** Interactive checkpoint archways (`🚩 GATE 1..4` & `🏁 FINISH / LAP`) placeable on the floor via D-Pad UP or HUD button. Real-time lap timer, lap counting, and personal best records.
+  * **⚔️ Full Combat Arsenal:**
+    * **[L1 / LB] (Hold):** Minigun rapid fire (18 Hz) with bumper muzzle flashes, tracer bullets, screen shake, and rumble.
+    * **[X]:** Missile Launcher with Lock-On HUD reticle, target tracking, comic explosions, and haptics.
+    * **[Y]:** Bob-Omb EMP shockwave detonator.
+    * **[B]:** Banana Peels dropped behind the kart (causes 360° spin-out and power cut).
+    * **[A]:** Mushroom Boost & Active Item trigger.
+    * **[R1 / RB]:** Weapon Select / Horn.
+* **🔊 Low-Latency SoundPool SFX & Dynamic Engine RPM Synthesizer:**
+  * Procedurally synthesized 16-bit PCM 44.1 kHz arcade audio engine (zero external dependencies).
+  * Pitch-modulated kart engine sound scaling in real time with live throttle telemetry ($0.8\text{x} \dots 2.2\text{x}$).
+* **🥽 Meta Quest 3 & VR Headset Stereoscopic 3D AR:**
+  * Dual-viewport Side-by-Side (SBS) rendering with inter-pupillary distance (IPD) parallax: AR coins, gates, and boxes appear with tangible 3D depth directly in your room.
+* **🛠️ Video Recorder Color Channel Inversion Bugfix:**
+  * Hardware-accelerated Skia `ColorMatrix` RGB/BGR channel swapper fixing the inverted red/blue colors (cyan Mario hat) on Google Tensor (Pixel 7 Pro) and Mali/Exynos GPUs, with AR overlay burn-in.
 
 ---
 
-## 🎮 Controller Mapping
+## 🎮 Controller Combat Mapping
 
-### Meta Quest Touch Plus Controllers (Quest 3 / Pro / 2)
+### Meta Quest Touch Plus & Gamepads (Xbox, PlayStation, Switch Pro)
 
-| Input | Action | Description |
+| Input | Combat Function | Description |
 | :--- | :--- | :--- |
-| **Right Trigger** | **Throttle (0 – 70%)** | Smooth analog acceleration |
-| **A Button** | **Full Throttle Boost (100%)** | Instant maximum boost (with haptic rumble) |
-| **X Button** | **Boost (100%)** | Secondary full boost button |
-| **Left Trigger / Grip** | **Brake / Reverse** | Decelerate or reverse |
-| **Left Thumbstick (X-Axis)** | **Steering** | Analog steering (Left / Right) |
-| **Y Button** | **Toggle VR Mode** | Switch between Flat Cockpit and Immersive 3D SBS View |
-| **Thumbstick Click (L3 / R3)** | **Reset Orientation** | Zero out artificial horizon heading |
-| **B Button** | **Back / Cancel** | Safe dialog navigation |
-
-### Standard Bluetooth / USB Gamepads (Xbox, DualSense, 8BitDo)
-
-| Input | Function | Description |
-| :--- | :--- | :--- |
-| **R2 / RT Trigger** | **Throttle (0 – 70%)** | Sensitive analog control for smooth cornering |
-| **A / Cross (✕)** | **Full Throttle Boost (100%)** | Instant maximum acceleration |
-| **X / Square (□)** | **Boost (100%)** | Alternative boost button |
-| **L2 / LT Trigger** | **Brake / Reverse** | Slow down or drive backwards |
-| **Left Stick (X-Axis)** | **Steering** | Analog steering (Left / Right) |
-| **B / Circle (○)** | **Menu Back** | Intercepted in cockpit to prevent accidental exit |
-| **REC Button (HUD)** | **Start/Stop Recording** | Save 720p FPV race video with live HUD overlay |
+| **Right Trigger (R2 / RT)** | **Throttle (0 – 70%)** | Sensitive analog acceleration for precision cornering |
+| **Left Trigger (L2 / LT)** | **Brake & Reverse** | Decelerate or reverse |
+| **Left Stick** | **Analog Steering** | Proportional steering Left / Right |
+| **L1 / LB (Hold)** | **🔥 Minigun (Gatling)** | 18 Hz rapid-fire rotary cannon with tracers & screen shake |
+| **R1 / RB** | **🎯 Weapon Select / Horn** | Cycle active item or honk car horn |
+| **X Button / Square (□)** | **🚀 Lock-On Missile** | Guided rocket with radar target tracking & explosion |
+| **Y Button / Triangle (△)** | **💣 Bob-Omb / EMP** | High-explosive shockwave clearing obstacles |
+| **B Button / Circle (○)** | **🍌 Banana Peel Drop** | Deploys rear banana hazard (or dialog back in menus) |
+| **A Button / Cross (✕)** | **🍄 Boost / Active Item** | 100% Nitro Boost or triggers current roulette weapon |
+| **D-Pad Up** | **🚩 Set Checkpoint Gate** | Drops a virtual checkpoint / finish gate at current position |
+| **D-Pad Down / Select** | **🥽 Toggle VR Mode** | Switch between 2D Cockpit and Immersive 3D SBS View |
+| **Thumbstick Click (L3/R3)**| **🧭 Reset Orientation** | Zero out artificial horizon heading |
 
 ---
 

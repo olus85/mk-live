@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
@@ -37,7 +39,10 @@ data class RecordingOverlayInfo(
     val batteryPct: Int = 100,
     val character: String = "Mario",
     val speedKmh: Int = 0,
-    val headingDeg: Float = 0f
+    val headingDeg: Float = 0f,
+    val coins: Int = 0,
+    val lap: Int = 1,
+    val activeWeapon: String? = null
 )
 
 /**
@@ -74,6 +79,18 @@ class VideoRecorder {
 
     private val isRunning = AtomicBoolean(false)
     private var includeOverlay = true
+    var isColorSwapEnabled: Boolean = true
+
+    // Color swap paint for hardware encoders expecting BGR (Tensor, Mali, Exynos)
+    private val colorSwapPaint = Paint(Paint.FILTER_BITMAP_FLAG).apply {
+        val rbSwapMatrix = ColorMatrix(floatArrayOf(
+            0f, 0f, 1f, 0f, 0f, // New R from B
+            0f, 1f, 0f, 0f, 0f, // G stays G
+            1f, 0f, 0f, 0f, 0f, // New B from R
+            0f, 0f, 0f, 1f, 0f  // A stays A
+        ))
+        colorFilter = ColorMatrixColorFilter(rbSwapMatrix)
+    }
 
     // Reusable Paints for fast HUD rendering
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -100,6 +117,13 @@ class VideoRecorder {
         setShadowLayer(4f, 1f, 1f, Color.BLACK)
     }
 
+    private val yellowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#FFD600")
+        textSize = 22f
+        typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+        setShadowLayer(4f, 1f, 1f, Color.BLACK)
+    }
+
     private val gaugePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
     }
@@ -107,9 +131,10 @@ class VideoRecorder {
     private val destRect = Rect(0, 0, 1280, 720)
 
     @Synchronized
-    fun startRecording(context: Context, recordOverlay: Boolean = true): Boolean {
+    fun startRecording(context: Context, recordOverlay: Boolean = true, colorSwap: Boolean = true): Boolean {
         if (isRunning.get()) return false
         includeOverlay = recordOverlay
+        isColorSwapEnabled = colorSwap
 
         try {
             val moviesDir = File(
@@ -166,7 +191,11 @@ class VideoRecorder {
         }
     }
 
-    fun recordFrame(frameBitmap: Bitmap, overlay: RecordingOverlayInfo) {
+    fun recordFrame(
+        frameBitmap: Bitmap,
+        overlay: RecordingOverlayInfo,
+        arDrawCallback: ((Canvas) -> Unit)? = null
+    ) {
         if (!isRunning.get() || inputSurface == null) return
 
         try {
@@ -174,10 +203,14 @@ class VideoRecorder {
             val canvas: Canvas = surface.lockHardwareCanvas() ?: return
 
             try {
-                // 1. Draw raw video stream frame scaled to 1280x720
-                canvas.drawBitmap(frameBitmap, null, destRect, null)
+                // 1. Draw raw video stream frame scaled to 1280x720 with ColorMatrix R/B swap if enabled
+                val framePaint = if (isColorSwapEnabled) colorSwapPaint else null
+                canvas.drawBitmap(frameBitmap, null, destRect, framePaint)
 
-                // 2. Draw Cockpit HUD overlay if enabled
+                // 2. Render AR overlay elements if callback supplied
+                arDrawCallback?.invoke(canvas)
+
+                // 3. Draw Cockpit HUD overlay if enabled
                 if (includeOverlay) {
                     drawCockpitHud(canvas, overlay)
                 }
@@ -215,6 +248,11 @@ class VideoRecorder {
         textPaint.color = Color.WHITE
         textPaint.textSize = 24f
         canvas.drawText(timeStr, 68f, 56f, textPaint)
+
+        // TOP CENTER: Coins & Lap Info
+        canvas.drawRoundRect(RectF(480f, 20f, 800f, 76f), 12f, 12f, hudBgPaint)
+        canvas.drawText("🪙 x${"%02d".format(overlay.coins)}", 500f, 54f, yellowPaint)
+        canvas.drawText("LAP ${overlay.lap}/3", 640f, 54f, cyanPaint)
 
         // TOP RIGHT: Character & Battery
         canvas.drawRoundRect(RectF(1020f, 20f, 1256f, 76f), 12f, 12f, hudBgPaint)

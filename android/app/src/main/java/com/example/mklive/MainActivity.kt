@@ -153,30 +153,56 @@ class MainActivity : ComponentActivity() {
             activeDeviceName = formatControllerName(event.device?.name)
 
             when (keyCode) {
-                // A or X Button: Full-Throttle BOOST (100%)
-                KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_X -> {
+                // A Button: Mushroom Boost (100%) & Use Active Item
+                KeyEvent.KEYCODE_BUTTON_A -> {
                     if (!padBoost) {
                         padBoost = true
                         triggerHapticFeedback(45)
+                        viewModel.useActiveItem()
                         dispatchGamepadInput()
                     }
                     return true
                 }
 
-                // Y Button: Quick Toggle VR Mode (SBS / 2D) on Quest & controllers
+                // X Button: Rocket Launcher (Lock-On Missiles)
+                KeyEvent.KEYCODE_BUTTON_X -> {
+                    viewModel.fireRocket()
+                    triggerHapticFeedback(55)
+                    return true
+                }
+
+                // Y Button: Bob-Omb / EMP Shockwave
                 KeyEvent.KEYCODE_BUTTON_Y -> {
-                    viewModel.toggleVrMode()
+                    viewModel.throwBobomb()
+                    triggerHapticFeedback(65)
+                    return true
+                }
+
+                // L1 / LB: Minigun Rapid Fire (Hold to fire)
+                KeyEvent.KEYCODE_BUTTON_L1 -> {
+                    viewModel.startMinigun()
+                    triggerHapticFeedback(30)
+                    return true
+                }
+
+                // R1 / RB: Weapon Select / Horn
+                KeyEvent.KEYCODE_BUTTON_R1 -> {
+                    viewModel.cycleWeapon()
                     triggerHapticFeedback(35)
                     return true
                 }
 
-                // Grip Buttons (L1 / R1): Brake
-                KeyEvent.KEYCODE_BUTTON_R1, KeyEvent.KEYCODE_BUTTON_L1 -> {
-                    if (!padBrake) {
-                        padBrake = true
-                        triggerHapticFeedback(30)
-                        dispatchGamepadInput()
-                    }
+                // D-Pad Up: Drop / Set Virtual Gate Checkpoint at current position
+                KeyEvent.KEYCODE_DPAD_UP -> {
+                    viewModel.addVirtualGate()
+                    triggerHapticFeedback(40)
+                    return true
+                }
+
+                // D-Pad Down / Select: Quick Toggle VR Mode (SBS / 2D)
+                KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_BUTTON_SELECT -> {
+                    viewModel.toggleVrMode()
+                    triggerHapticFeedback(35)
                     return true
                 }
 
@@ -199,7 +225,7 @@ class MainActivity : ComponentActivity() {
                     return true
                 }
 
-                // B Button: Intercept back to prevent app closing during gameplay
+                // B Button: Close dialogs if open, otherwise drop Banana peel
                 KeyEvent.KEYCODE_BUTTON_B -> {
                     if (viewModel.isSettingsOpen.value) {
                         viewModel.closeSettings()
@@ -207,6 +233,9 @@ class MainActivity : ComponentActivity() {
                         viewModel.closePairing()
                     } else if (viewModel.isVrMode.value) {
                         viewModel.setVrMode(false)
+                    } else {
+                        viewModel.dropBanana()
+                        triggerHapticFeedback(35)
                     }
                     return true
                 }
@@ -236,14 +265,17 @@ class MainActivity : ComponentActivity() {
             activeDeviceName = formatControllerName(event.device?.name)
 
             when (keyCode) {
-                KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_X -> {
+                KeyEvent.KEYCODE_BUTTON_A -> {
                     padBoost = false
                     dispatchGamepadInput()
                     return true
                 }
-                KeyEvent.KEYCODE_BUTTON_R1, KeyEvent.KEYCODE_BUTTON_L1 -> {
-                    padBrake = false
-                    dispatchGamepadInput()
+                // Stop Minigun when L1 is released
+                KeyEvent.KEYCODE_BUTTON_L1 -> {
+                    viewModel.stopMinigun()
+                    return true
+                }
+                KeyEvent.KEYCODE_BUTTON_R1 -> {
                     return true
                 }
                 KeyEvent.KEYCODE_BUTTON_R2 -> {
@@ -256,7 +288,7 @@ class MainActivity : ComponentActivity() {
                     dispatchGamepadInput()
                     return true
                 }
-                KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BUTTON_Y -> {
+                KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BUTTON_X, KeyEvent.KEYCODE_BUTTON_Y -> {
                     return true
                 }
             }

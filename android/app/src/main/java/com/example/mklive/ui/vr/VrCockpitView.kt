@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -32,6 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mklive.R
+import com.example.mklive.ar.ArEngine
+import com.example.mklive.ar.ArOverlayView
+import com.example.mklive.ar.model.ArElement
+import com.example.mklive.combat.WeaponType
 import com.example.mklive.model.DriveCommand
 import com.example.mklive.model.ImuSnapshot
 import com.example.mklive.model.KartDeviceInfo
@@ -39,7 +42,6 @@ import com.example.mklive.model.OpenKartStateResponse
 import com.example.mklive.model.VideoStreamMode
 import com.example.mklive.ui.video.VideoSurfaceView
 import com.example.mklive.video.H264MediaCodecPlayer
-import kotlin.math.abs
 import kotlin.math.min
 
 /**
@@ -47,9 +49,9 @@ import kotlin.math.min
  *
  * Renders independent Left Eye and Right Eye viewports with:
  * - Ultra low latency FPV camera stream
- * - Subtle stereoscopic parallax IPD offset for true 3D depth perception
+ * - True stereoscopic 3D AR rendering with IPD disparity
  * - Dynamic Artificial Gyroscopic Horizon responding in real-time to kart pitch & roll
- * - Futuristic jet-fighter style HUD instruments (Speedometer, Boost, G-Meter, Heading, Battery)
+ * - Futuristic jet-fighter style HUD instruments (Speedometer, Boost, G-Meter, Coins, Lap)
  */
 @Composable
 fun VrCockpitView(
@@ -65,6 +67,12 @@ fun VrCockpitView(
     isRecording: Boolean,
     recordingDurationSec: Int,
     inputSource: String,
+    arEngine: ArEngine,
+    coins: Int = 0,
+    currentLap: Int = 1,
+    activeWeapon: WeaponType = WeaponType.MINIGUN,
+    lockTarget: ArElement? = null,
+    isMinigunFiring: Boolean = false,
     onToggleVr: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -73,7 +81,7 @@ fun VrCockpitView(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // LEFT EYE VIEWPORT (with +2dp parallax offset)
+        // LEFT EYE VIEWPORT (with +IPD stereoscopic 3D parallax)
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -94,11 +102,17 @@ fun VrCockpitView(
                 isRecording = isRecording,
                 recordingDurationSec = recordingDurationSec,
                 inputSource = inputSource,
+                arEngine = arEngine,
+                coins = coins,
+                currentLap = currentLap,
+                activeWeapon = activeWeapon,
+                lockTarget = lockTarget,
+                isMinigunFiring = isMinigunFiring,
                 onToggleVr = onToggleVr
             )
         }
 
-        // RIGHT EYE VIEWPORT (with -2dp parallax offset)
+        // RIGHT EYE VIEWPORT (with -IPD stereoscopic 3D parallax)
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -119,6 +133,12 @@ fun VrCockpitView(
                 isRecording = isRecording,
                 recordingDurationSec = recordingDurationSec,
                 inputSource = inputSource,
+                arEngine = arEngine,
+                coins = coins,
+                currentLap = currentLap,
+                activeWeapon = activeWeapon,
+                lockTarget = lockTarget,
+                isMinigunFiring = isMinigunFiring,
                 onToggleVr = onToggleVr
             )
         }
@@ -140,6 +160,12 @@ private fun EyeViewport(
     isRecording: Boolean,
     recordingDurationSec: Int,
     inputSource: String,
+    arEngine: ArEngine,
+    coins: Int,
+    currentLap: Int,
+    activeWeapon: WeaponType,
+    lockTarget: ArElement?,
+    isMinigunFiring: Boolean,
     onToggleVr: () -> Unit
 ) {
     // Parallax IPD offset: gives a subtle stereoscopic depth to HUD elements relative to video
@@ -155,13 +181,27 @@ private fun EyeViewport(
             modifier = Modifier.fillMaxSize()
         )
 
-        // 2. VR COCKPIT HUD LAYER
+        // 2. 🌟 STEREOSCOPIC 3D AR LAYER
+        if (arEngine.isArEnabled) {
+            ArOverlayView(
+                arEngine = arEngine,
+                pitchDeg = imuSnapshot.pitchDeg,
+                rollDeg = imuSnapshot.rollDeg,
+                isLeftEye = isLeftEye,
+                activeWeapon = activeWeapon,
+                lockTarget = lockTarget,
+                isMinigunFiring = isMinigunFiring,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // 3. VR COCKPIT HUD LAYER
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = if (isLeftEye) ipdOffset else 0.dp, end = if (!isLeftEye) -ipdOffset else 0.dp)
         ) {
-            // TOP BAR: REC Status + Compass + Battery
+            // TOP BAR: REC Status + Coins + Lap + Compass + Battery
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,7 +209,7 @@ private fun EyeViewport(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Top Left: Character & FPS
+                // Top Left: Character, FPS, Coins & Lap
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = (kartInfo.character ?: "MARIO").uppercase(),
@@ -185,24 +225,56 @@ private fun EyeViewport(
                         fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace
                     )
-                }
-
-                // Top Center: Mini Compass
-                val currentHdg = ((imuSnapshot.headingDeg % 360f + 360f) % 360f).toInt()
-                val directions = arrayOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
-                val dirLabel = directions[((currentHdg + 22) / 45) % 8]
-                Box(
-                    modifier = Modifier
-                        .background(Color(0x88000000), RoundedCornerShape(3.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
-                ) {
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "${"%03d".format(currentHdg)}° $dirLabel",
-                        color = Color(0xFF00E5FF),
-                        fontSize = 11.sp,
+                        text = "🪙 x${"%02d".format(coins)}",
+                        color = Color(0xFFFFD54F),
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace
                     )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = "L$currentLap",
+                        color = Color(0xFF00E5FF),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+
+                // Top Center: Mini Compass & Active Weapon
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val currentHdg = ((imuSnapshot.headingDeg % 360f + 360f) % 360f).toInt()
+                    val directions = arrayOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+                    val dirLabel = directions[((currentHdg + 22) / 45) % 8]
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0x88000000), RoundedCornerShape(3.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "${"%03d".format(currentHdg)}° $dirLabel",
+                            color = Color(0xFF00E5FF),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xAAFF1744), RoundedCornerShape(3.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "${activeWeapon.icon} ${activeWeapon.displayName.take(7)}",
+                            color = Color.White,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
                 }
 
                 // Top Right: Battery & REC indicator
@@ -233,7 +305,7 @@ private fun EyeViewport(
                 pitchG = imuSnapshot.gLong,
                 rollG = imuSnapshot.gLat,
                 modifier = Modifier
-                    .size(140.dp)
+                    .size(130.dp)
                     .align(Alignment.Center)
             )
 
@@ -321,9 +393,7 @@ fun ArtificialHorizon(pitchG: Float, rollG: Float, modifier: Modifier = Modifier
         val radius = min(cx, cy) - 10f
 
         // Calculate pitch offset and roll angle
-        // Roll: gLat causes roll angle (-30 to +30 deg)
         val rollDeg = (rollG.coerceIn(-1.5f, 1.5f) * -25f)
-        // Pitch: gLong causes pitch vertical shift (-20 to +20 px)
         val pitchDy = (pitchG.coerceIn(-1.5f, 1.5f) * 20f)
 
         // Outer Reticle Ring
@@ -343,7 +413,6 @@ fun ArtificialHorizon(pitchG: Float, rollG: Float, modifier: Modifier = Modifier
 
         // Dynamic Gyro Horizon Line
         rotate(degrees = rollDeg, pivot = Offset(cx, cy)) {
-            // Horizon line
             val lineY = cy + pitchDy
             drawLine(
                 color = Color(0xAA00E5FF),
@@ -352,7 +421,6 @@ fun ArtificialHorizon(pitchG: Float, rollG: Float, modifier: Modifier = Modifier
                 strokeWidth = 2f
             )
 
-            // Pitch ladder ticks
             drawLine(
                 color = Color(0x6600E5FF),
                 start = Offset(cx - 15f, lineY - 16f),
