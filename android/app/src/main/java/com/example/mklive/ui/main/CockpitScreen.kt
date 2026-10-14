@@ -3,15 +3,25 @@ package com.example.mklive.ui.main
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.mklive.ar.ArOverlayView
+import com.example.mklive.game.GameMode
+import com.example.mklive.game.GameState
 import com.example.mklive.model.VideoStreamMode
 import com.example.mklive.ui.controller.VirtualTouchOverlay
 import com.example.mklive.ui.hud.CockpitOverlay
+import com.example.mklive.ui.hud.CountdownOverlay
 import com.example.mklive.ui.pairing.PairingDialog
 import com.example.mklive.ui.settings.SettingsDialog
 import com.example.mklive.ui.video.VideoSurfaceView
@@ -61,6 +71,14 @@ fun CockpitScreen(
     val lockTarget by viewModel.arEngine.combatManager.lockOnTarget.collectAsState()
     val isMinigunFiring by viewModel.arEngine.combatManager.isMinigunFiring.collectAsState()
 
+    val selectedMode by viewModel.selectedMode.collectAsState()
+    val countdownNumber by viewModel.countdownNumber.collectAsState()
+    val rocketStartActive by viewModel.rocketStartActive.collectAsState()
+    val balloonsRemaining by viewModel.balloonsRemaining.collectAsState()
+    val nextGateAngleDeg by viewModel.nextGateAngleDeg.collectAsState()
+    var showSaveTrackDialog by remember { mutableStateOf(false) }
+    var trackSaveName by remember { mutableStateOf("Mein Kurs") }
+
     val h264Fps by viewModel.h264Player.fps.collectAsState()
     val isH264Connected by viewModel.h264Player.isConnected.collectAsState()
 
@@ -79,6 +97,8 @@ fun CockpitScreen(
             viewModel.closePairing()
         } else if (isVrMode) {
             viewModel.setVrMode(false)
+        } else {
+            viewModel.navigateTo(GameState.MAIN_MENU)
         }
     }
 
@@ -157,6 +177,12 @@ fun CockpitScreen(
                 rouletteItem = rouletteItem,
                 isRecording = isRecording,
                 recordingDurationSec = recordingDurationSec,
+                gameMode = selectedMode,
+                balloonsRemaining = balloonsRemaining,
+                nextGateAngleDeg = nextGateAngleDeg,
+                onMenuClicked = { viewModel.navigateTo(GameState.MAIN_MENU) },
+                onAddBuilderElement = { elemType -> viewModel.arEngine.addTrackElement(elemType) },
+                onSaveTrackClicked = { showSaveTrackDialog = true },
                 onFireWeapon = { viewModel.useActiveItem() },
                 onCycleWeapon = { viewModel.cycleWeapon() },
                 onDropGate = { viewModel.addVirtualGate() },
@@ -166,6 +192,13 @@ fun CockpitScreen(
                 onSettingsClicked = { viewModel.openSettings() },
                 onToggleVrMode = { viewModel.toggleVrMode() },
                 onResetHeading = { viewModel.resetHeading() },
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // 5. LAKITU COUNTDOWN OVERLAY
+            CountdownOverlay(
+                countdownNumber = countdownNumber,
+                rocketStartActive = rocketStartActive,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -207,6 +240,35 @@ fun CockpitScreen(
                     viewModel.saveSettings(newIp, newMode)
                 },
                 onDismiss = { viewModel.closeSettings() }
+            )
+        }
+
+        // 7. SAVE CUSTOM TRACK DIALOG
+        if (showSaveTrackDialog) {
+            AlertDialog(
+                onDismissRequest = { showSaveTrackDialog = false },
+                title = { Text("Strecke Speichern") },
+                text = {
+                    OutlinedTextField(
+                        value = trackSaveName,
+                        onValueChange = { trackSaveName = it },
+                        label = { Text("Name der Strecke") },
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.saveCurrentTrack(trackSaveName)
+                        showSaveTrackDialog = false
+                    }) {
+                        Text("Speichern")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showSaveTrackDialog = false }) {
+                        Text("Abbrechen")
+                    }
+                }
             )
         }
     }

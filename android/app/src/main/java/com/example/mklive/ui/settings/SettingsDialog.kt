@@ -1,5 +1,6 @@
 package com.example.mklive.ui.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
@@ -72,21 +77,24 @@ fun SettingsDialog(
     var vrMode by remember { mutableStateOf(isVrMode) }
     var selectedLang by remember { mutableStateOf(currentLanguage) }
 
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("🎮 GAMEPLAY", "🕶️ AR & GRAFIK", "🔊 AUDIO", "🕹️ STEUERUNG", "🌐 NETZWERK")
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF1E262C),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF37474F)),
+            shape = RoundedCornerShape(14.dp),
+            color = Color(0xF0131A24),
+            border = BorderStroke(1.5.dp, Color(0xFF00E5FF)),
             modifier = Modifier
-                .width(720.dp)
+                .width(680.dp)
                 .padding(8.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(14.dp)
+                    .padding(16.dp)
                     .fillMaxWidth()
             ) {
                 // Header
@@ -96,392 +104,312 @@ fun SettingsDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.settings_title),
+                        text = "⚙️ SYSTEM EINSTELLUNGEN",
                         color = Color(0xFF00E5FF),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace
                     )
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Surface(
-                            color = Color(0x3300E5FF),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_tag_pc),
-                                color = Color(0xFF00E5FF),
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-
-                        Surface(
-                            color = Color(0x337C4DFF),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_tag_quest),
-                                color = Color(0xFFB388FF),
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = "v2.1.0 • AAA EDITION",
+                        color = Color(0x88FFFFFF),
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // 2-Column Compact Layout
-                Row(
+                // Navigation Tabs
+                LazyRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // LEFT COLUMN: Base IP, Video Mode, AR & VR
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Section: Base Station IP
-                        Column {
-                            Text(
-                                text = stringResource(R.string.settings_base_ip),
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                            Spacer(modifier = Modifier.height(3.dp))
-                            OutlinedTextField(
-                                value = hostIp,
-                                onValueChange = { hostIp = it },
-                                singleLine = true,
-                                textStyle = androidx.compose.ui.text.TextStyle(
-                                    fontSize = 12.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    color = Color(0xFF00E5FF)
-                                ),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF00E5FF),
-                                    unfocusedBorderColor = Color(0xFF37474F),
-                                    focusedContainerColor = Color(0xFF141A1E),
-                                    unfocusedContainerColor = Color(0xFF141A1E)
-                                ),
-                                modifier = Modifier.fillMaxWidth().height(44.dp)
-                            )
-                        }
-
-                        // Section: Video Mode
-                        Column {
-                            Text(
-                                text = stringResource(R.string.settings_video_mode),
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                            Spacer(modifier = Modifier.height(3.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Button(
-                                    onClick = { videoMode = VideoStreamMode.H264_MEDIACODEC },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (videoMode == VideoStreamMode.H264_MEDIACODEC) Color(0xFF00B0FF) else Color(0x3337474F)
-                                    ),
-                                    shape = RoundedCornerShape(4.dp),
-                                    modifier = Modifier.weight(1f).height(30.dp)
-                                ) {
-                                    Text(
-                                        stringResource(R.string.settings_h264_label),
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (videoMode == VideoStreamMode.H264_MEDIACODEC) Color.White else Color(0xFFCFD8DC)
-                                    )
-                                }
-
-                                Button(
-                                    onClick = { videoMode = VideoStreamMode.MJPEG_STREAM },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (videoMode == VideoStreamMode.MJPEG_STREAM) Color(0xFF00B0FF) else Color(0x3337474F)
-                                    ),
-                                    shape = RoundedCornerShape(4.dp),
-                                    modifier = Modifier.weight(1f).height(30.dp)
-                                ) {
-                                    Text(
-                                        stringResource(R.string.settings_mjpeg_label),
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (videoMode == VideoStreamMode.MJPEG_STREAM) Color.White else Color(0xFFCFD8DC)
-                                    )
-                                }
-                            }
-                        }
-
-                        // Section: AR Toggle
+                    items(tabs.indices.toList()) { index ->
+                        val isSelected = selectedTab == index
                         Surface(
-                            color = Color(0xFF141A1E),
+                            onClick = { selectedTab = index },
+                            color = if (isSelected) Color(0xFF00E5FF) else Color(0xCC1A2433),
                             shape = RoundedCornerShape(6.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (arEnabled) Color(0xFF00E5FF) else Color(0x2237474F)),
-                            modifier = Modifier.fillMaxWidth()
+                            border = BorderStroke(1.dp, if (isSelected) Color(0xFF00E5FF) else Color(0x33FFFFFF)),
+                            modifier = Modifier.height(32.dp)
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(horizontal = 12.dp)
                             ) {
-                                Column {
-                                    Text(stringResource(R.string.settings_ar_toggle), color = Color.White, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
-                                    Text(stringResource(R.string.settings_ar_desc), color = Color(0xFF00E5FF), fontSize = 7.5.sp)
-                                }
-                                Switch(
-                                    checked = arEnabled,
-                                    onCheckedChange = {
-                                        arEnabled = it
-                                        onSetArEnabled(it)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFF00E5FF),
-                                        checkedTrackColor = Color(0x6600E5FF)
-                                    )
+                                Text(
+                                    text = tabs[index],
+                                    color = if (isSelected) Color.Black else Color.White,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
-                            }
-                        }
-
-                        // Section: VR & Meta Quest 3 Mode
-                        Surface(
-                            color = Color(0xFF141A1E),
-                            shape = RoundedCornerShape(6.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (vrMode) Color(0xFF7C4DFF) else Color(0x2237474F)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(stringResource(R.string.settings_vr_toggle), color = Color.White, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
-                                    Text(stringResource(R.string.settings_vr_desc), color = Color(0xFFB388FF), fontSize = 7.5.sp)
-                                }
-                                Switch(
-                                    checked = vrMode,
-                                    onCheckedChange = {
-                                        vrMode = it
-                                        onSetVrMode(it)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFFB388FF),
-                                        checkedTrackColor = Color(0x667C4DFF)
-                                    )
-                                )
-                            }
-                        }
-                    }
-
-                    // RIGHT COLUMN: Recording Options, Audio Engine & Language
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.settings_rec_title),
-                            color = Color.White,
-                            fontSize = 9.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        )
-
-                        // Option 1: Cockpit HUD in Video
-                        Surface(
-                            color = Color(0xFF141A1E),
-                            shape = RoundedCornerShape(6.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(stringResource(R.string.settings_rec_hud_title), color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                    Text(stringResource(R.string.settings_rec_hud_desc), color = Color(0xFF78909C), fontSize = 7.5.sp)
-                                }
-                                Switch(
-                                    checked = recordOverlay,
-                                    onCheckedChange = {
-                                        recordOverlay = it
-                                        onSetRecordingOverlay(it)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFF00E5FF),
-                                        checkedTrackColor = Color(0x6600E5FF)
-                                    )
-                                )
-                            }
-                        }
-
-                        // Option 2: Color Channel Swap (RGB/BGR)
-                        Surface(
-                            color = Color(0xFF141A1E),
-                            shape = RoundedCornerShape(6.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(stringResource(R.string.settings_rec_color_swap_title), color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                    Text(stringResource(R.string.settings_rec_color_swap_desc), color = Color(0xFFFFB74D), fontSize = 7.5.sp)
-                                }
-                                Switch(
-                                    checked = recordColorSwap,
-                                    onCheckedChange = {
-                                        recordColorSwap = it
-                                        onSetRecordingColorSwap(it)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFFFFB74D),
-                                        checkedTrackColor = Color(0x66FFB74D)
-                                    )
-                                )
-                            }
-                        }
-
-                        // Option 3: Arcade SFX
-                        Surface(
-                            color = Color(0xFF141A1E),
-                            shape = RoundedCornerShape(6.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(stringResource(R.string.settings_audio_sfx_toggle), color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                    Text(stringResource(R.string.settings_audio_sfx_desc), color = Color(0xFF81C784), fontSize = 7.5.sp)
-                                }
-                                Switch(
-                                    checked = sfxEnabled,
-                                    onCheckedChange = {
-                                        sfxEnabled = it
-                                        onSetSfxEnabled(it)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFF81C784),
-                                        checkedTrackColor = Color(0x6681C784)
-                                    )
-                                )
-                            }
-                        }
-
-                        // Option 4: Dynamic Engine RPM Sound
-                        Surface(
-                            color = Color(0xFF141A1E),
-                            shape = RoundedCornerShape(6.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(stringResource(R.string.settings_audio_engine_toggle), color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                    Text(stringResource(R.string.settings_audio_engine_desc), color = Color(0xFF81C784), fontSize = 7.5.sp)
-                                }
-                                Switch(
-                                    checked = engineSoundEnabled,
-                                    onCheckedChange = {
-                                        engineSoundEnabled = it
-                                        onSetEngineSoundEnabled(it)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFF81C784),
-                                        checkedTrackColor = Color(0x6681C784)
-                                    )
-                                )
-                            }
-                        }
-
-                        // Section: Language Selection
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            val languages = listOf("system" to "SYSTEM", "de" to "DEUTSCH", "en" to "ENGLISH")
-                            languages.forEach { (code, label) ->
-                                val isSelected = selectedLang == code
-                                Button(
-                                    onClick = {
-                                        selectedLang = code
-                                        onSetLanguage(code)
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (isSelected) Color(0xFF00B0FF) else Color(0x3337474F)
-                                    ),
-                                    shape = RoundedCornerShape(4.dp),
-                                    modifier = Modifier.weight(1f).height(28.dp)
-                                ) {
-                                    Text(
-                                        label,
-                                        fontSize = 8.5.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) Color.White else Color(0xFFCFD8DC)
-                                    )
-                                }
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Tab Content Body
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(Color(0x880B1017), RoundedCornerShape(8.dp))
+                        .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(8.dp))
+                        .padding(14.dp)
+                ) {
+                    when (selectedTab) {
+                        0 -> { // 🎮 GAMEPLAY
+                            Column(
+                                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // Language
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("App-Sprache / Language", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("Wähle System, Deutsch oder Englisch", color = Color(0x88FFFFFF), fontSize = 10.sp)
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        val langs = listOf("system" to "SYSTEM", "de" to "DEUTSCH", "en" to "ENGLISH")
+                                        langs.forEach { (code, label) ->
+                                            val isSel = selectedLang == code
+                                            Surface(
+                                                onClick = {
+                                                    selectedLang = code
+                                                    onSetLanguage(code)
+                                                },
+                                                color = if (isSel) Color(0xFF00E5FF) else Color(0x33FFFFFF),
+                                                shape = RoundedCornerShape(4.dp),
+                                                modifier = Modifier.height(28.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 8.dp)) {
+                                                    Text(label, color = if (isSel) Color.Black else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // VR Mode
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("Stereoscopic SBS VR-Modus", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("Für Meta Quest 3 & VR Headsets (Side-by-Side 3D)", color = Color(0x88FFFFFF), fontSize = 10.sp)
+                                    }
+                                    Switch(
+                                        checked = vrMode,
+                                        onCheckedChange = {
+                                            vrMode = it
+                                            onSetVrMode(it)
+                                        },
+                                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFF00E5FF), checkedTrackColor = Color(0x6600E5FF))
+                                    )
+                                }
+                            }
+                        }
+
+                        1 -> { // 🕶️ AR & GRAFIK
+                            Column(
+                                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // AR Toggle
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("Augmented Reality Hologramme", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("Münzen, ?-Boxen, Turbostreifen & Raketen einblenden", color = Color(0x88FFFFFF), fontSize = 10.sp)
+                                    }
+                                    Switch(
+                                        checked = arEnabled,
+                                        onCheckedChange = {
+                                            arEnabled = it
+                                            onSetArEnabled(it)
+                                        },
+                                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFF00E5FF), checkedTrackColor = Color(0x6600E5FF))
+                                    )
+                                }
+
+                                // Red/Blue Color Correction (BGR Swap)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("Rot/Blau Farbkorrektur (BGR/RGB Swap)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("Korrigiert blaue Mario-Mützen in Videoaufnahmen", color = Color(0xFF00E676), fontSize = 10.sp)
+                                    }
+                                    Switch(
+                                        checked = recordColorSwap,
+                                        onCheckedChange = {
+                                            recordColorSwap = it
+                                            onSetRecordingColorSwap(it)
+                                        },
+                                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFF00E676), checkedTrackColor = Color(0x6600E676))
+                                    )
+                                }
+
+                                // Stream Mode (H.264 vs MJPEG)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("Video Streaming Decoder", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("MJPEG (Sehr stabil) oder H.264 MediaCodec (Ultrageringe Latenz)", color = Color(0x88FFFFFF), fontSize = 10.sp)
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        VideoStreamMode.values().forEach { mode ->
+                                            val isSel = videoMode == mode
+                                            Surface(
+                                                onClick = { videoMode = mode },
+                                                color = if (isSel) Color(0xFF00E5FF) else Color(0x33FFFFFF),
+                                                shape = RoundedCornerShape(4.dp),
+                                                modifier = Modifier.height(28.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 8.dp)) {
+                                                    Text(mode.name.substringBefore("_"), color = if (isSel) Color.Black else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        2 -> { // 🔊 AUDIO
+                            Column(
+                                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // SFX Toggle
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("Arcade Soundeffekte (SFX)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("Münz-Klingeln, Roulette, Raketenstart & Fanfaren", color = Color(0x88FFFFFF), fontSize = 10.sp)
+                                    }
+                                    Switch(
+                                        checked = sfxEnabled,
+                                        onCheckedChange = {
+                                            sfxEnabled = it
+                                            onSetSfxEnabled(it)
+                                        },
+                                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFFD54F), checkedTrackColor = Color(0x66FFD54F))
+                                    )
+                                }
+
+                                // Engine Sound Synthesizer
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("Prozeduraler Motorsound Synthesizer", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("Dynamischer V8 / Elektromotor-Sound synchron zum Gaspedal", color = Color(0xFF81C784), fontSize = 10.sp)
+                                    }
+                                    Switch(
+                                        checked = engineSoundEnabled,
+                                        onCheckedChange = {
+                                            engineSoundEnabled = it
+                                            onSetEngineSoundEnabled(it)
+                                        },
+                                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFF81C784), checkedTrackColor = Color(0x6681C784))
+                                    )
+                                }
+                            }
+                        }
+
+                        3 -> { // 🕹️ CONTROLS
+                            Column(
+                                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text("GAMEPAD & CONTROLLER BELEGUNG:", color = Color(0xFFFFD54F), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("• R2 / Gas-Trigger: Beschleunigen (bis zu 100% Nitro)", color = Color.White, fontSize = 10.sp)
+                                Text("• L2 / Bremse: Bremsen & Rückwärtsgang", color = Color.White, fontSize = 10.sp)
+                                Text("• Linker Stick / D-Pad: Präzise Lenkung", color = Color.White, fontSize = 10.sp)
+                                Text("• Taste A: Aktives Item einsetzen & Rocket Start Gas", color = Color(0xFF00E5FF), fontSize = 10.sp)
+                                Text("• Taste X: Zielsuchende Raketen abfeuern", color = Color(0xFFFF5252), fontSize = 10.sp)
+                                Text("• Taste Y: Bob-Omb / EMP-Schockwelle werfen", color = Color(0xFFFF9100), fontSize = 10.sp)
+                                Text("• Taste L1: Minigun Schnellfeuer gedrückt halten", color = Color(0xFFFFD54F), fontSize = 10.sp)
+                                Text("• D-Pad Oben: Checkpoint-Tor an aktueller Position setzen", color = Color(0xFF00E676), fontSize = 10.sp)
+                                Text("• D-Pad Unten: AR-Strecke vor dem Kart neu ausrichten", color = Color(0xFF80D8FF), fontSize = 10.sp)
+                            }
+                        }
+
+                        4 -> { // 🌐 NETWORK
+                            Column(
+                                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text("KART BASE STATION VERBINDUNG:", color = Color(0xFF00E5FF), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                OutlinedTextField(
+                                    value = hostIp,
+                                    onValueChange = { hostIp = it },
+                                    label = { Text("IP-Adresse des PC Servers / Hotspots", fontSize = 10.sp) },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedBorderColor = Color(0xFF00E5FF),
+                                        unfocusedBorderColor = Color(0x66FFFFFF)
+                                    )
+                                )
+                                Text("Ports: WebSocket 9000 • Video 9001 • Teleoperation 5102 UDP • Telemetrie 19002 UDP", color = Color(0x88FFFFFF), fontSize = 9.sp)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // Footer Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
                         onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0x3337474F)),
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.height(32.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0x33FFFFFF)),
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.height(36.dp)
                     ) {
-                        Text(stringResource(R.string.settings_cancel), fontSize = 10.sp, color = Color(0xFFCFD8DC))
+                        Text("ABBRECHEN", fontSize = 10.sp, color = Color.White)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Button(
                         onClick = {
                             onSave(hostIp, videoMode)
                             onDismiss()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.height(32.dp)
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.height(36.dp)
                     ) {
-                        Text(stringResource(R.string.settings_save), color = Color(0xFF00222A), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("SPEICHERN & ANWENDEN", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
                     }
                 }
             }

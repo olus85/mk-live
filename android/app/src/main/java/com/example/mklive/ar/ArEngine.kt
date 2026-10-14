@@ -17,6 +17,8 @@ import com.example.mklive.audio.SoundManager
 import com.example.mklive.combat.CombatManager
 import com.example.mklive.combat.ParticleSystem
 import com.example.mklive.combat.WeaponType
+import com.example.mklive.game.TrackElementData
+import com.example.mklive.game.TrackPreset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -68,6 +70,14 @@ class ArEngine(
     private var currentLapTimer = 0f
     private var activeGateNumber = 1
 
+    var onLapCompleted: ((lap: Int, lapTimeSec: Float) -> Unit)? = null
+    var onRaceFinished: ((totalTimeSec: Float, lapTimes: List<Float>) -> Unit)? = null
+    var onHazardHit: (() -> Unit)? = null
+
+    private val completedLapTimes = mutableListOf<Float>()
+    var totalRaceTimer = 0f
+    val targetLaps = 3
+
     init {
         // Initialize 3D bitmap assets and shadows
         ArAssets.init(context)
@@ -88,6 +98,36 @@ class ArEngine(
 
         // Initialize with standard demo race elements in front of kart
         spawnDefaultTrackElements()
+    }
+
+    fun loadTrack(preset: TrackPreset) {
+        elements.clear()
+        tracker.reset(0f, 0f, 0f)
+        _coinsCollected.value = 0
+        _currentLap.value = 1
+        currentLapTimer = 0f
+        totalRaceTimer = 0f
+        completedLapTimes.clear()
+        activeGateNumber = 1
+
+        preset.elements.forEach { elemData ->
+            val (wx, wy) = tracker.toWorld(elemData.x, elemData.y)
+            val elem: ArElement = when (elemData.type) {
+                "COIN" -> CoinElement(UUID.randomUUID().toString(), wx, wy)
+                "ITEM_BOX" -> ItemBoxElement(UUID.randomUUID().toString(), wx, wy)
+                "DASH_PAD" -> DashPadElement(UUID.randomUUID().toString(), wx, wy)
+                "BANANA" -> BananaElement(UUID.randomUUID().toString(), wx, wy)
+                "GATE" -> GateElement(
+                    UUID.randomUUID().toString(),
+                    wx,
+                    wy,
+                    gateNumber = elemData.gateNumber,
+                    isFinishLine = elemData.isFinishLine
+                )
+                else -> CoinElement(UUID.randomUUID().toString(), wx, wy)
+            }
+            elements.add(elem)
+        }
     }
 
     fun spawnDefaultTrackElements() {
@@ -118,6 +158,9 @@ class ArEngine(
         _coinsCollected.value = 0
         _currentLap.value = 1
         currentLapTimer = 0f
+        totalRaceTimer = 0f
+        completedLapTimes.clear()
+        activeGateNumber = 1
         spawnDefaultTrackElements()
         soundManager.playCountdownGo()
     }
@@ -140,6 +183,46 @@ class ArEngine(
             val (cx, cy) = tracker.toWorld(0f, i * 0.8f)
             elements.add(CoinElement(UUID.randomUUID().toString(), cx, cy))
         }
+    }
+
+    fun addTrackElement(type: String) {
+        val (wx, wy) = Pair(tracker.x, tracker.y)
+        val elem: ArElement = when (type.uppercase()) {
+            "GATE" -> {
+                val nextNum = elements.count { it is GateElement } + 1
+                val isFinish = nextNum == 1
+                GateElement(UUID.randomUUID().toString(), wx, wy, gateNumber = nextNum, isFinishLine = isFinish)
+            }
+            "COIN" -> CoinElement(UUID.randomUUID().toString(), wx, wy)
+            "ITEM_BOX" -> ItemBoxElement(UUID.randomUUID().toString(), wx, wy)
+            "DASH_PAD" -> DashPadElement(UUID.randomUUID().toString(), wx, wy)
+            "BANANA" -> BananaElement(UUID.randomUUID().toString(), wx, wy)
+            else -> CoinElement(UUID.randomUUID().toString(), wx, wy)
+        }
+        elements.add(elem)
+        soundManager.playCoin()
+    }
+
+    fun getPlacedElements(): List<TrackElementData> {
+        return elements.map { elem ->
+            val rel = tracker.toRelative(elem.x, elem.y)
+            when (elem) {
+                is GateElement -> TrackElementData("GATE", rel.xRel, rel.yRel, elem.z, elem.gateNumber, elem.isFinishLine)
+                is CoinElement -> TrackElementData("COIN", rel.xRel, rel.yRel, elem.z)
+                is ItemBoxElement -> TrackElementData("ITEM_BOX", rel.xRel, rel.yRel, elem.z)
+                is DashPadElement -> TrackElementData("DASH_PAD", rel.xRel, rel.yRel, elem.z)
+                is BananaElement -> TrackElementData("BANANA", rel.xRel, rel.yRel, elem.z)
+                else -> TrackElementData("COIN", rel.xRel, rel.yRel, elem.z)
+            }
+        }
+    }
+
+    fun getNextGateAngleDeg(): Float? {
+        val nextGate = elements.filterIsInstance<GateElement>().find { it.gateNumber == activeGateNumber && !it.isPassedThisLap }
+            ?: elements.filterIsInstance<GateElement>().firstOrNull() ?: return null
+        val rel = tracker.toRelative(nextGate.x, nextGate.y)
+        val rad = kotlin.math.atan2(rel.xRel, rel.yRel)
+        return (rad * 180f / Math.PI.toFloat())
     }
 
     fun update(
@@ -167,6 +250,7 @@ class ArEngine(
 
         // 2. Update Timers & Boost States
         currentLapTimer += dt
+        totalRaceTimer += dt
         if (boostTimer > 0f) {
             boostTimer -= dt
             _isBoostActive.value = true
@@ -258,6 +342,7 @@ class ArEngine(
                 soundManager.playSlip()
                 spinTimer = 1.0f
                 particleSystem.triggerScreenShake(12f)
+                onHazardHit?.invoke()
             }
 
             is GateElement -> {
@@ -267,15 +352,26 @@ class ArEngine(
                     if (elem.isFinishLine) {
                         // Completed lap!
                         val lapTime = currentLapTimer
+                        completedLapTimes.add(lapTime)
                         val best = _bestLapTimeSec.value
                         if (best == null || lapTime < best) {
                             _bestLapTimeSec.value = lapTime
                         }
+                        onLapCompleted?.invoke(_currentLap.value, lapTime)
                         currentLapTimer = 0f
-                        _currentLap.value = minOf(3, _currentLap.value + 1)
-                        // Reset all gates for next lap
-                        elements.filterIsInstance<GateElement>().forEach { it.isPassedThisLap = false }
-                        activeGateNumber = 1
+
+                        if (_currentLap.value >= targetLaps) {
+                            soundManager.playVictoryJingle()
+                            onRaceFinished?.invoke(totalRaceTimer, completedLapTimes.toList())
+                        } else {
+                            if (_currentLap.value == 2) {
+                                soundManager.playFinalLapFanfare()
+                            }
+                            _currentLap.value++
+                            // Reset all gates for next lap
+                            elements.filterIsInstance<GateElement>().forEach { it.isPassedThisLap = false }
+                            activeGateNumber = 1
+                        }
                     } else {
                         activeGateNumber++
                     }

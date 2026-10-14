@@ -15,5 +15,12 @@ enum class SoundId {
     BOOST_TURBO,
     HORN,
     LOCK_ON,
-    ENGINE_LOOP
+    ENGINE_LOOP,
+    VICTORY_JINGLE,
+    FINAL_LAP_FANFARE,
+    BALLOON_POP,
+    MENU_SELECT,
+    MENU_CONFIRM,
+    WRONG_WAY,
+    ROCKET_START
 }

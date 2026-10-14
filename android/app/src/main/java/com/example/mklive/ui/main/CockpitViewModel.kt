@@ -23,6 +23,15 @@ import com.example.mklive.protocol.TelemetryClient
 import com.example.mklive.video.H264MediaCodecPlayer
 import com.example.mklive.video.MjpegPlayer
 import com.example.mklive.video.RecordingOverlayInfo
+import com.example.mklive.game.CharacterProfile
+import com.example.mklive.game.GameMode
+import com.example.mklive.game.GameState
+import com.example.mklive.game.HudTheme
+import com.example.mklive.game.RaceResult
+import com.example.mklive.game.RaceState
+import com.example.mklive.game.SpeedClass
+import com.example.mklive.game.TrackManager
+import com.example.mklive.game.TrackPreset
 import com.example.mklive.video.VideoRecorder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -123,6 +132,65 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     private val _currentLanguage = MutableStateFlow(prefs.getString("app_language", "system") ?: "system")
     val currentLanguage: StateFlow<String> = _currentLanguage.asStateFlow()
 
+    // 🌟 AAA Game State & Customization
+    private val _gameState = MutableStateFlow(GameState.MAIN_MENU)
+    val gameState: StateFlow<GameState> = _gameState.asStateFlow()
+
+    private val _selectedMode = MutableStateFlow(GameMode.GRAND_PRIX)
+    val selectedMode: StateFlow<GameMode> = _selectedMode.asStateFlow()
+
+    private val _selectedCharacter = MutableStateFlow(
+        try {
+            CharacterProfile.valueOf(prefs.getString("character_profile", CharacterProfile.MARIO.name) ?: CharacterProfile.MARIO.name)
+        } catch (_: Exception) { CharacterProfile.MARIO }
+    )
+    val selectedCharacter: StateFlow<CharacterProfile> = _selectedCharacter.asStateFlow()
+
+    private val _selectedSpeedClass = MutableStateFlow(
+        try {
+            SpeedClass.valueOf(prefs.getString("speed_class", SpeedClass.CC_100.name) ?: SpeedClass.CC_100.name)
+        } catch (_: Exception) { SpeedClass.CC_100 }
+    )
+    val selectedSpeedClass: StateFlow<SpeedClass> = _selectedSpeedClass.asStateFlow()
+
+    private val _selectedHudTheme = MutableStateFlow(
+        try {
+            HudTheme.valueOf(prefs.getString("hud_theme", HudTheme.CYBERPUNK.name) ?: HudTheme.CYBERPUNK.name)
+        } catch (_: Exception) { HudTheme.CYBERPUNK }
+    )
+    val selectedHudTheme: StateFlow<HudTheme> = _selectedHudTheme.asStateFlow()
+
+    private val _selectedTrack = MutableStateFlow(TrackManager.getBuiltinPresets()[0])
+    val selectedTrack: StateFlow<TrackPreset> = _selectedTrack.asStateFlow()
+
+    private val _customTracks = MutableStateFlow<List<TrackPreset>>(emptyList())
+    val customTracks: StateFlow<List<TrackPreset>> = _customTracks.asStateFlow()
+
+    private val _raceState = MutableStateFlow(RaceState.READY)
+    val raceState: StateFlow<RaceState> = _raceState.asStateFlow()
+
+    private val _countdownNumber = MutableStateFlow(-1) // 3, 2, 1, 0 (GO), -1 (off)
+    val countdownNumber: StateFlow<Int> = _countdownNumber.asStateFlow()
+
+    private val _rocketStartActive = MutableStateFlow(false)
+    val rocketStartActive: StateFlow<Boolean> = _rocketStartActive.asStateFlow()
+
+    private val _rocketStartStall = MutableStateFlow(false)
+    val rocketStartStall: StateFlow<Boolean> = _rocketStartStall.asStateFlow()
+
+    private val _balloonsRemaining = MutableStateFlow(3)
+    val balloonsRemaining: StateFlow<Int> = _balloonsRemaining.asStateFlow()
+
+    private val _lastRaceResult = MutableStateFlow<RaceResult?>(null)
+    val lastRaceResult: StateFlow<RaceResult?> = _lastRaceResult.asStateFlow()
+
+    private val _lapTimes = MutableStateFlow<List<Float>>(emptyList())
+    val lapTimes: StateFlow<List<Float>> = _lapTimes.asStateFlow()
+
+    private val _nextGateAngleDeg = MutableStateFlow<Float?>(null)
+    val nextGateAngleDeg: StateFlow<Float?> = _nextGateAngleDeg.asStateFlow()
+
+    private var countdownJob: Job? = null
     private var pollJob: Job? = null
     private var arUpdateJob: Job? = null
     private var wsDriveSocket: WebSocket? = null
@@ -137,6 +205,55 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
 
         // Start dynamic engine sound loop
         engineSynthesizer.start(viewModelScope)
+
+        // Load saved custom tracks
+        reloadCustomTracks()
+
+        // 🌟 Wire AR Engine Game & Lap Events
+        arEngine.onLapCompleted = { lap, lapTime ->
+            _lapTimes.value = _lapTimes.value + lapTime
+        }
+
+        arEngine.onRaceFinished = { totalTime, laps ->
+            val result = RaceResult(
+                gameMode = _selectedMode.value,
+                speedClass = _selectedSpeedClass.value,
+                totalTimeSec = totalTime,
+                lapTimesSec = laps,
+                bestLapTimeSec = laps.minOrNull() ?: totalTime,
+                coinsEarned = arEngine.coinsCollected.value,
+                isNewRecord = true,
+                balloonsRemaining = _balloonsRemaining.value,
+                rank = 1
+            )
+            _lastRaceResult.value = result
+            _raceState.value = RaceState.FINISHED
+            _gameState.value = GameState.VICTORY
+        }
+
+        arEngine.onHazardHit = {
+            if (_selectedMode.value == GameMode.BALLOON_BATTLE) {
+                val rem = (_balloonsRemaining.value - 1).coerceAtLeast(0)
+                _balloonsRemaining.value = rem
+                soundManager.playBalloonPop()
+                if (rem == 0) {
+                    val result = RaceResult(
+                        gameMode = GameMode.BALLOON_BATTLE,
+                        speedClass = _selectedSpeedClass.value,
+                        totalTimeSec = arEngine.totalRaceTimer,
+                        lapTimesSec = emptyList(),
+                        bestLapTimeSec = arEngine.totalRaceTimer,
+                        coinsEarned = arEngine.coinsCollected.value,
+                        isNewRecord = false,
+                        balloonsRemaining = 0,
+                        rank = 3
+                    )
+                    _lastRaceResult.value = result
+                    _raceState.value = RaceState.FINISHED
+                    _gameState.value = GameState.VICTORY
+                }
+            }
+        }
 
         // Connect frame callback from MJPEG player to video recorder
         mjpegPlayer.onFrameAvailable = { bitmap ->
@@ -186,6 +303,8 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
                     yawRateDegS = imu.yawRateDegS,
                     headingDeg = imu.headingDeg
                 )
+
+                _nextGateAngleDeg.value = arEngine.getNextGateAngleDeg()
             }
         }
 
@@ -314,19 +433,23 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
         _isGamepadActive.value = true
         _inputSource.value = padName
 
-        // Apply AR buffs (Dash Pad 100% boost, Coin speed multiplier, Banana spin cut)
-        var effThrottle = throttle
-        if (arEngine.isSpinningOut.value) {
-            effThrottle = 0 // Spin-out engine cut
+        // In countdown, allow checking throttle for rocket start, but don't drive kart yet
+        val isLocked = _raceState.value == RaceState.COUNTDOWN
+        val speedFactor = _selectedSpeedClass.value.maxSpeedMps / SpeedClass.CC_100.maxSpeedMps
+
+        var effThrottle = (throttle * speedFactor).toInt().coerceIn(-127, 127)
+        if (isLocked) {
+            effThrottle = 0
+        } else if (_rocketStartStall.value || arEngine.isSpinningOut.value) {
+            effThrottle = 0 // Spin-out or stall cut
         } else if (arEngine.isBoostActive.value) {
             effThrottle = 127 // 100% Nitro Boost
         } else if (effThrottle > 0 && arEngine.coinsCollected.value > 0) {
-            // +1.5% max speed per coin
             val buff = 1.0f + (arEngine.coinsCollected.value * 0.015f)
             effThrottle = (effThrottle * buff).toInt().coerceIn(0, 127)
         }
 
-        _currentCommand.value = DriveCommand(effThrottle, steering, brake, padName)
+        _currentCommand.value = DriveCommand(if (isLocked) throttle else effThrottle, steering, brake, padName)
         teleoperation.submitCommand(effThrottle, steering, brake, padName)
         engineSynthesizer.updateTelemetry(effThrottle, brake, arEngine.isBoostActive.value)
     }
@@ -334,8 +457,13 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     fun handleTouchInput(throttle: Int, steering: Int, brake: Boolean) {
         if (!_isGamepadActive.value) {
             _inputSource.value = "Touch"
-            var effThrottle = throttle
-            if (arEngine.isSpinningOut.value) {
+            val isLocked = _raceState.value == RaceState.COUNTDOWN
+            val speedFactor = _selectedSpeedClass.value.maxSpeedMps / SpeedClass.CC_100.maxSpeedMps
+
+            var effThrottle = (throttle * speedFactor).toInt().coerceIn(-127, 127)
+            if (isLocked) {
+                effThrottle = 0
+            } else if (_rocketStartStall.value || arEngine.isSpinningOut.value) {
                 effThrottle = 0
             } else if (arEngine.isBoostActive.value) {
                 effThrottle = 127
@@ -344,9 +472,111 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
                 effThrottle = (effThrottle * buff).toInt().coerceIn(0, 127)
             }
 
-            _currentCommand.value = DriveCommand(effThrottle, steering, brake, "touch")
+            _currentCommand.value = DriveCommand(if (isLocked) throttle else effThrottle, steering, brake, "touch")
             teleoperation.submitCommand(effThrottle, steering, brake, "touch")
             engineSynthesizer.updateTelemetry(effThrottle, brake, arEngine.isBoostActive.value)
+        }
+    }
+
+    // 🌟 Navigation & Game Lifecycle Methods
+    fun navigateTo(state: GameState) {
+        soundManager.playMenuSelect()
+        _gameState.value = state
+    }
+
+    fun selectMode(mode: GameMode) {
+        soundManager.playMenuSelect()
+        _selectedMode.value = mode
+    }
+
+    fun selectCharacter(char: CharacterProfile) {
+        soundManager.playMenuSelect()
+        _selectedCharacter.value = char
+        prefs.edit().putString("character_profile", char.name).apply()
+    }
+
+    fun selectSpeedClass(sc: SpeedClass) {
+        soundManager.playMenuSelect()
+        _selectedSpeedClass.value = sc
+        prefs.edit().putString("speed_class", sc.name).apply()
+    }
+
+    fun selectHudTheme(theme: HudTheme) {
+        soundManager.playMenuSelect()
+        _selectedHudTheme.value = theme
+        prefs.edit().putString("hud_theme", theme.name).apply()
+    }
+
+    fun selectTrack(preset: TrackPreset) {
+        soundManager.playMenuSelect()
+        _selectedTrack.value = preset
+    }
+
+    fun reloadCustomTracks() {
+        _customTracks.value = TrackManager.loadCustomTracks(getApplication())
+    }
+
+    fun saveCurrentTrack(name: String): Boolean {
+        val elements = arEngine.getPlacedElements()
+        val ok = TrackManager.saveCustomTrack(getApplication(), name, elements)
+        if (ok) {
+            reloadCustomTracks()
+            soundManager.playMenuConfirm()
+        }
+        return ok
+    }
+
+    fun startRace() {
+        soundManager.playMenuConfirm()
+        _balloonsRemaining.value = 3
+        _lapTimes.value = emptyList()
+        _rocketStartActive.value = false
+        _rocketStartStall.value = false
+        arEngine.loadTrack(_selectedTrack.value)
+        _gameState.value = GameState.IN_GAME
+
+        // Start Lakitu Countdown (3, 2, 1, GO)
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch(Dispatchers.Default) {
+            _raceState.value = RaceState.COUNTDOWN
+
+            // 3...
+            _countdownNumber.value = 3
+            soundManager.playCountdownBeep()
+            delay(1000)
+
+            // 2... (Rocket start trigger window)
+            var heldGasOnTwo = false
+            _countdownNumber.value = 2
+            soundManager.playCountdownBeep()
+            val startTwo = System.currentTimeMillis()
+            while (System.currentTimeMillis() - startTwo < 1000) {
+                if (_currentCommand.value.throttle >= 60) {
+                    heldGasOnTwo = true
+                }
+                delay(40)
+            }
+
+            // 1...
+            _countdownNumber.value = 1
+            soundManager.playCountdownBeep()
+            delay(1000)
+
+            // GO!
+            _countdownNumber.value = 0
+            if (heldGasOnTwo && _currentCommand.value.throttle >= 60) {
+                // 🚀 ROCKET START SUCCESS!
+                _rocketStartActive.value = true
+                soundManager.playRocketStart()
+                arEngine.triggerBoost(2.5f)
+            } else {
+                soundManager.playCountdownGo()
+            }
+
+            _raceState.value = RaceState.RACING
+            delay(800)
+            _countdownNumber.value = -1
+            _rocketStartActive.value = false
         }
     }
 

@@ -19,9 +19,16 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.mklive.game.GameState
 import com.example.mklive.theme.MKLiveTheme
 import com.example.mklive.ui.main.CockpitScreen
 import com.example.mklive.ui.main.CockpitViewModel
+import com.example.mklive.ui.menu.GarageScreen
+import com.example.mklive.ui.menu.MainMenuScreen
+import com.example.mklive.ui.menu.TrackSelectScreen
+import com.example.mklive.ui.victory.VictoryScreen
 import com.example.mklive.util.LocaleHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -69,11 +76,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MKLiveTheme {
+                val gameState by viewModel.gameState.collectAsState()
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Black
                 ) {
-                    CockpitScreen(viewModel = viewModel)
+                    when (gameState) {
+                        GameState.MAIN_MENU -> MainMenuScreen(viewModel = viewModel)
+                        GameState.GARAGE -> GarageScreen(viewModel = viewModel)
+                        GameState.TRACK_SELECT -> TrackSelectScreen(viewModel = viewModel)
+                        GameState.IN_GAME -> CockpitScreen(viewModel = viewModel)
+                        GameState.VICTORY -> VictoryScreen(viewModel = viewModel)
+                    }
                 }
             }
         }
@@ -152,99 +167,153 @@ class MainActivity : ComponentActivity() {
         if (isGamepad) {
             activeDeviceName = formatControllerName(event.device?.name)
 
-            when (keyCode) {
-                // A Button: Mushroom Boost (100%) & Use Active Item
-                KeyEvent.KEYCODE_BUTTON_A -> {
-                    if (!padBoost) {
-                        padBoost = true
-                        triggerHapticFeedback(45)
-                        viewModel.useActiveItem()
-                        dispatchGamepadInput()
+            val currentState = viewModel.gameState.value
+            when (currentState) {
+                GameState.MAIN_MENU -> {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_START -> {
+                            viewModel.startRace()
+                            triggerHapticFeedback(45)
+                            return true
+                        }
+                        KeyEvent.KEYCODE_BUTTON_Y -> {
+                            viewModel.navigateTo(GameState.GARAGE)
+                            triggerHapticFeedback(30)
+                            return true
+                        }
+                        KeyEvent.KEYCODE_BUTTON_X -> {
+                            viewModel.navigateTo(GameState.TRACK_SELECT)
+                            triggerHapticFeedback(30)
+                            return true
+                        }
+                        KeyEvent.KEYCODE_BUTTON_SELECT -> {
+                            viewModel.openSettings()
+                            triggerHapticFeedback(30)
+                            return true
+                        }
                     }
-                    return true
                 }
-
-                // X Button: Rocket Launcher (Lock-On Missiles)
-                KeyEvent.KEYCODE_BUTTON_X -> {
-                    viewModel.fireRocket()
-                    triggerHapticFeedback(55)
-                    return true
-                }
-
-                // Y Button: Bob-Omb / EMP Shockwave
-                KeyEvent.KEYCODE_BUTTON_Y -> {
-                    viewModel.throwBobomb()
-                    triggerHapticFeedback(65)
-                    return true
-                }
-
-                // L1 / LB: Minigun Rapid Fire (Hold to fire)
-                KeyEvent.KEYCODE_BUTTON_L1 -> {
-                    viewModel.startMinigun()
-                    triggerHapticFeedback(30)
-                    return true
-                }
-
-                // R1 / RB: Weapon Select / Horn
-                KeyEvent.KEYCODE_BUTTON_R1 -> {
-                    viewModel.cycleWeapon()
-                    triggerHapticFeedback(35)
-                    return true
-                }
-
-                // D-Pad Up: Drop / Set Virtual Gate Checkpoint at current position
-                KeyEvent.KEYCODE_DPAD_UP -> {
-                    viewModel.addVirtualGate()
-                    triggerHapticFeedback(40)
-                    return true
-                }
-
-                // D-Pad Down: Quick Re-center AR Track in front of kart
-                KeyEvent.KEYCODE_DPAD_DOWN -> {
-                    viewModel.arEngine.resetTrack()
-                    triggerHapticFeedback(45)
-                    return true
-                }
-
-                // Select: Quick Toggle VR Mode (SBS / 2D)
-                KeyEvent.KEYCODE_BUTTON_SELECT -> {
-                    viewModel.toggleVrMode()
-                    triggerHapticFeedback(35)
-                    return true
-                }
-
-                // Digital Trigger Buttons (Fallback for L2 / R2)
-                KeyEvent.KEYCODE_BUTTON_R2 -> {
-                    currentRTrigger = 1.0f
-                    dispatchGamepadInput()
-                    return true
-                }
-                KeyEvent.KEYCODE_BUTTON_L2 -> {
-                    currentLTrigger = 1.0f
-                    dispatchGamepadInput()
-                    return true
-                }
-
-                // Thumbstick Clicks (L3 / R3): Reset Heading / Compass
-                KeyEvent.KEYCODE_BUTTON_THUMBL, KeyEvent.KEYCODE_BUTTON_THUMBR -> {
-                    viewModel.resetHeading()
-                    triggerHapticFeedback(25)
-                    return true
-                }
-
-                // B Button: Close dialogs if open, otherwise drop Banana peel
-                KeyEvent.KEYCODE_BUTTON_B -> {
-                    if (viewModel.isSettingsOpen.value) {
-                        viewModel.closeSettings()
-                    } else if (viewModel.isPairingOpen.value) {
-                        viewModel.closePairing()
-                    } else if (viewModel.isVrMode.value) {
-                        viewModel.setVrMode(false)
-                    } else {
-                        viewModel.dropBanana()
-                        triggerHapticFeedback(35)
+                GameState.GARAGE, GameState.TRACK_SELECT, GameState.VICTORY -> {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_BUTTON_B -> {
+                            viewModel.navigateTo(GameState.MAIN_MENU)
+                            triggerHapticFeedback(35)
+                            return true
+                        }
+                        KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_START -> {
+                            if (currentState == GameState.TRACK_SELECT || currentState == GameState.VICTORY) {
+                                viewModel.startRace()
+                            } else {
+                                viewModel.navigateTo(GameState.MAIN_MENU)
+                            }
+                            triggerHapticFeedback(45)
+                            return true
+                        }
                     }
-                    return true
+                }
+                GameState.IN_GAME -> {
+                    when (keyCode) {
+                        // Start Button: Pause and return to Main Menu
+                        KeyEvent.KEYCODE_BUTTON_START -> {
+                            viewModel.navigateTo(GameState.MAIN_MENU)
+                            triggerHapticFeedback(45)
+                            return true
+                        }
+
+                        // A Button: Mushroom Boost (100%) & Use Active Item
+                        KeyEvent.KEYCODE_BUTTON_A -> {
+                            if (!padBoost) {
+                                padBoost = true
+                                triggerHapticFeedback(45)
+                                viewModel.useActiveItem()
+                                dispatchGamepadInput()
+                            }
+                            return true
+                        }
+
+                        // X Button: Rocket Launcher (Lock-On Missiles)
+                        KeyEvent.KEYCODE_BUTTON_X -> {
+                            viewModel.fireRocket()
+                            triggerHapticFeedback(55)
+                            return true
+                        }
+
+                        // Y Button: Bob-Omb / EMP Shockwave
+                        KeyEvent.KEYCODE_BUTTON_Y -> {
+                            viewModel.throwBobomb()
+                            triggerHapticFeedback(65)
+                            return true
+                        }
+
+                        // L1 / LB: Minigun Rapid Fire (Hold to fire)
+                        KeyEvent.KEYCODE_BUTTON_L1 -> {
+                            viewModel.startMinigun()
+                            triggerHapticFeedback(30)
+                            return true
+                        }
+
+                        // R1 / RB: Weapon Select / Horn
+                        KeyEvent.KEYCODE_BUTTON_R1 -> {
+                            viewModel.cycleWeapon()
+                            triggerHapticFeedback(35)
+                            return true
+                        }
+
+                        // D-Pad Up: Drop / Set Virtual Gate Checkpoint at current position
+                        KeyEvent.KEYCODE_DPAD_UP -> {
+                            viewModel.addVirtualGate()
+                            triggerHapticFeedback(40)
+                            return true
+                        }
+
+                        // D-Pad Down: Quick Re-center AR Track in front of kart
+                        KeyEvent.KEYCODE_DPAD_DOWN -> {
+                            viewModel.arEngine.resetTrack()
+                            triggerHapticFeedback(45)
+                            return true
+                        }
+
+                        // Select: Quick Toggle VR Mode (SBS / 2D)
+                        KeyEvent.KEYCODE_BUTTON_SELECT -> {
+                            viewModel.toggleVrMode()
+                            triggerHapticFeedback(35)
+                            return true
+                        }
+
+                        // Digital Trigger Buttons (Fallback for L2 / R2)
+                        KeyEvent.KEYCODE_BUTTON_R2 -> {
+                            currentRTrigger = 1.0f
+                            dispatchGamepadInput()
+                            return true
+                        }
+                        KeyEvent.KEYCODE_BUTTON_L2 -> {
+                            currentLTrigger = 1.0f
+                            dispatchGamepadInput()
+                            return true
+                        }
+
+                        // Thumbstick Clicks (L3 / R3): Reset Heading / Compass
+                        KeyEvent.KEYCODE_BUTTON_THUMBL, KeyEvent.KEYCODE_BUTTON_THUMBR -> {
+                            viewModel.resetHeading()
+                            triggerHapticFeedback(25)
+                            return true
+                        }
+
+                        // B Button: Close dialogs if open, otherwise drop Banana peel
+                        KeyEvent.KEYCODE_BUTTON_B -> {
+                            if (viewModel.isSettingsOpen.value) {
+                                viewModel.closeSettings()
+                            } else if (viewModel.isPairingOpen.value) {
+                                viewModel.closePairing()
+                            } else if (viewModel.isVrMode.value) {
+                                viewModel.setVrMode(false)
+                            } else {
+                                viewModel.dropBanana()
+                                triggerHapticFeedback(35)
+                            }
+                            return true
+                        }
+                    }
                 }
             }
         }
@@ -257,6 +326,8 @@ class MainActivity : ComponentActivity() {
                 viewModel.closePairing()
             } else if (viewModel.isVrMode.value) {
                 viewModel.setVrMode(false)
+            } else if (viewModel.gameState.value != GameState.MAIN_MENU) {
+                viewModel.navigateTo(GameState.MAIN_MENU)
             }
             return true // Never exit app directly during gameplay
         }
@@ -316,6 +387,8 @@ class MainActivity : ComponentActivity() {
             viewModel.closePairing()
         } else if (viewModel.isVrMode.value) {
             viewModel.setVrMode(false)
+        } else if (viewModel.gameState.value != GameState.MAIN_MENU) {
+            viewModel.navigateTo(GameState.MAIN_MENU)
         }
     }
 }

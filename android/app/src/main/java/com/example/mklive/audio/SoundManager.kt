@@ -99,6 +99,13 @@ class SoundManager(private val context: Context) {
     fun playLockOn() = play(SoundId.LOCK_ON, 0.9f)
     fun playCountdownBeep() = play(SoundId.COUNTDOWN_BEEP, 0.9f)
     fun playCountdownGo() = play(SoundId.COUNTDOWN_GO, 1.0f)
+    fun playVictoryJingle() = play(SoundId.VICTORY_JINGLE, 1.0f)
+    fun playFinalLapFanfare() = play(SoundId.FINAL_LAP_FANFARE, 1.0f)
+    fun playBalloonPop() = play(SoundId.BALLOON_POP, 1.0f)
+    fun playMenuSelect() = play(SoundId.MENU_SELECT, 0.8f)
+    fun playMenuConfirm() = play(SoundId.MENU_CONFIRM, 0.9f)
+    fun playWrongWay() = play(SoundId.WRONG_WAY, 0.85f)
+    fun playRocketStart() = play(SoundId.ROCKET_START, 1.0f)
 
     fun release() {
         soundPool.release()

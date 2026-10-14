@@ -42,6 +42,7 @@ import com.example.mklive.model.DriveCommand
 import com.example.mklive.model.ImuSnapshot
 import com.example.mklive.model.KartDeviceInfo
 import com.example.mklive.model.OpenKartStateResponse
+import com.example.mklive.game.GameMode
 import kotlin.math.min
 
 @Composable
@@ -60,6 +61,12 @@ fun CockpitOverlay(
     rouletteItem: WeaponType = WeaponType.NONE,
     isRecording: Boolean = false,
     recordingDurationSec: Int = 0,
+    gameMode: GameMode = GameMode.GRAND_PRIX,
+    balloonsRemaining: Int = 3,
+    nextGateAngleDeg: Float? = null,
+    onMenuClicked: () -> Unit = {},
+    onAddBuilderElement: (String) -> Unit = {},
+    onSaveTrackClicked: () -> Unit = {},
     onFireWeapon: () -> Unit = {},
     onCycleWeapon: () -> Unit = {},
     onDropGate: () -> Unit = {},
@@ -80,7 +87,7 @@ fun CockpitOverlay(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            // 1. TOP-LEFT: Brand & Race Stats (Coins & Lap)
+            // 1. TOP-LEFT: Brand & Race Stats (Coins & Lap / Balloons)
             Row(
                 modifier = Modifier.align(Alignment.TopStart),
                 verticalAlignment = Alignment.CenterVertically
@@ -111,59 +118,119 @@ fun CockpitOverlay(
                 }
                 Spacer(modifier = Modifier.width(5.dp))
 
-                // Lap Pill
-                Surface(
-                    color = Color(0xDD111111),
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, Color(0xFF00E5FF))
-                ) {
-                    Text(
-                        text = "🏁 LAP $currentLap/3",
-                        color = Color(0xFF00E5FF),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
-                    )
+                if (gameMode == GameMode.BALLOON_BATTLE) {
+                    // Balloon Pill
+                    Surface(
+                        color = Color(0xDD111111),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, Color(0xFFFF1744))
+                    ) {
+                        Text(
+                            text = "🎈 x$balloonsRemaining",
+                            color = Color(0xFFFF1744),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                        )
+                    }
+                } else {
+                    // Lap Pill
+                    Surface(
+                        color = Color(0xDD111111),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, Color(0xFF00E5FF))
+                    ) {
+                        Text(
+                            text = "🏁 LAP $currentLap/3",
+                            color = Color(0xFF00E5FF),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                        )
+                    }
                 }
             }
 
-            // 2. TOP-CENTER: Compact Telemetry Status Pill
-            Surface(
+            // 2. TOP-CENTER: Compact Telemetry Status Pill & Gate Indicator
+            Column(
                 modifier = Modifier.align(Alignment.TopCenter),
-                color = Color(0xCC0A0E14),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, Color(0x4400E5FF))
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp)
+                Surface(
+                    color = Color(0xCC0A0E14),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, Color(0x4400E5FF))
                 ) {
-                    Text(
-                        text = (kartInfo.character ?: "KART").uppercase(),
-                        color = if (kartInfo.character != null) Color(0xFF00E676) else Color(0x99FFFFFF),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text("•", color = Color(0x44FFFFFF), fontSize = 9.sp)
-                    Text(
-                        text = "$videoFps FPS",
-                        color = if (videoFps >= 20) Color.White else Color(0xFFFF9100),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text("•", color = Color(0x44FFFFFF), fontSize = 9.sp)
-                    BatteryChip(
-                        batteryLevel = kartInfo.battery ?: 0,
-                        isCableConnected = kartInfo.cable == true
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                    ) {
+                        Text(
+                            text = (kartInfo.character ?: "KART").uppercase(),
+                            color = if (kartInfo.character != null) Color(0xFF00E676) else Color(0x99FFFFFF),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Text("•", color = Color(0x44FFFFFF), fontSize = 9.sp)
+                        Text(
+                            text = "$videoFps FPS",
+                            color = if (videoFps >= 20) Color.White else Color(0xFFFF9100),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Text("•", color = Color(0x44FFFFFF), fontSize = 9.sp)
+                        BatteryChip(
+                            batteryLevel = kartInfo.battery ?: 0,
+                            isCableConnected = kartInfo.cable == true
+                        )
+                    }
+                }
+
+                if (nextGateAngleDeg != null) {
+                    val deg = nextGateAngleDeg.toInt()
+                    val arrow = when {
+                        deg in -15..15 -> "▲ TOR GERADEAUS"
+                        deg in 16..60 -> "TOR RECHTS ▶"
+                        deg > 60 -> "SCHARF RECHTS ▶▶"
+                        deg in -60..-16 -> "◀ TOR LINKS"
+                        else -> "◀◀ SCHARF LINKS"
+                    }
+                    val heading = ((imuSnapshot.headingDeg % 360 + 360) % 360).toInt()
+                    val cardinal = when (heading) {
+                        in 338..360, in 0..22 -> "N"
+                        in 23..67 -> "NE"
+                        in 68..112 -> "E"
+                        in 113..157 -> "SE"
+                        in 158..202 -> "S"
+                        in 203..247 -> "SW"
+                        in 248..292 -> "W"
+                        in 293..337 -> "NW"
+                        else -> "N"
+                    }
+                    Surface(
+                        color = Color(0xEE0B121C),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF00E5FF)),
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Text(
+                            text = "$arrow (${deg}°) • %03d° %s".format(heading, cardinal),
+                            color = Color(0xFF00E5FF),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
                 }
             }
 
-            // 3. TOP-RIGHT: Controls Cluster (REC • Quick Actions • Settings ⚙️)
+            // 3. TOP-RIGHT: Controls Cluster (REC • Quick Actions • Settings ⚙️ • Menu ⏸️)
             Row(
                 modifier = Modifier.align(Alignment.TopEnd),
                 verticalAlignment = Alignment.CenterVertically,
@@ -262,6 +329,24 @@ fun CockpitOverlay(
                         Text(stringResource(R.string.hud_settings), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
+
+                // Main Menu / Pause Button
+                Surface(
+                    onClick = onMenuClicked,
+                    color = Color(0xCC182230),
+                    shape = RoundedCornerShape(6.dp),
+                    border = BorderStroke(1.dp, Color(0xFF00E5FF)),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("⏸️", fontSize = 11.sp)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("MENÜ", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
+                    }
+                }
             }
         }
 
@@ -308,14 +393,16 @@ fun CockpitOverlay(
             }
         }
 
-        // COMPASS TAPE (TOP CENTER)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 44.dp)
-                .clickable { onResetHeading() }
-        ) {
-            CompassTape(headingDeg = imuSnapshot.headingDeg)
+        // COMPASS TAPE (TOP CENTER - only shown when not racing towards a gate)
+        if (nextGateAngleDeg == null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 44.dp)
+                    .clickable { onResetHeading() }
+            ) {
+                CompassTape(headingDeg = imuSnapshot.headingDeg)
+            }
         }
 
         // G-METER INSTRUMENT (TOP RIGHT)
@@ -383,6 +470,44 @@ fun CockpitOverlay(
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace
             )
+        }
+
+        // 5. TRACK BUILDER FLOATING TOOLBAR
+        if (gameMode == GameMode.TRACK_BUILDER) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 14.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xF0101722),
+                border = BorderStroke(1.dp, Color(0xFFFFD54F))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("🛠️ BUILDER:", color = Color(0xFFFFD54F), fontSize = 10.sp, fontWeight = FontWeight.Black)
+                    Surface(onClick = { onAddBuilderElement("GATE") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
+                        Text("🚩 +TOR", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    }
+                    Surface(onClick = { onAddBuilderElement("COIN") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
+                        Text("🪙 +MÜNZE", color = Color(0xFFFFD54F), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    }
+                    Surface(onClick = { onAddBuilderElement("ITEM_BOX") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
+                        Text("📦 +BOX", color = Color(0xFF00E5FF), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    }
+                    Surface(onClick = { onAddBuilderElement("DASH_PAD") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
+                        Text("⚡ +TURBO", color = Color(0xFFFF9100), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    }
+                    Surface(onClick = { onAddBuilderElement("BANANA") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
+                        Text("🍌 +BANANE", color = Color(0xFFFFEB3B), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    }
+                    Surface(onClick = onSaveTrackClicked, color = Color(0xFF00E676), shape = RoundedCornerShape(4.dp)) {
+                        Text("💾 SPEICHERN", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                    }
+                }
+            }
         }
     }
 }

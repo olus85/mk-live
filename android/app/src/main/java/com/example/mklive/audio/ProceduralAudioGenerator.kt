@@ -52,6 +52,13 @@ object ProceduralAudioGenerator {
             SoundId.HORN -> generateHorn()
             SoundId.LOCK_ON -> generateLockOn()
             SoundId.ENGINE_LOOP -> generateEngineLoop()
+            SoundId.VICTORY_JINGLE -> generateVictoryJingle()
+            SoundId.FINAL_LAP_FANFARE -> generateFinalLapFanfare()
+            SoundId.BALLOON_POP -> generateBalloonPop()
+            SoundId.MENU_SELECT -> generateMenuSelect()
+            SoundId.MENU_CONFIRM -> generateMenuConfirm()
+            SoundId.WRONG_WAY -> generateWrongWay()
+            SoundId.ROCKET_START -> generateRocketStart()
         }
     }
 
@@ -328,6 +335,124 @@ object ProceduralAudioGenerator {
                     0.15 * sin(2.0 * PI * (baseFreq * 3.0) * t) +
                     0.10 * sin(2.0 * PI * (baseFreq * 4.0) * t)
             samples[i] = (wave.coerceIn(-1.0, 1.0) * 22000).toInt().toShort()
+        }
+        return samples
+    }
+
+    private fun generateVictoryJingle(): ShortArray {
+        val durationMs = 1200
+        val total = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+        val samples = ShortArray(total)
+        val notes = doubleArrayOf(523.25, 659.25, 783.99, 1046.50)
+        val noteLen = (SAMPLE_RATE * 0.18).toInt()
+
+        for (i in 0 until total) {
+            val noteIdx = minOf(notes.size - 1, i / noteLen)
+            val freq = notes[noteIdx]
+            val t = i.toDouble() / SAMPLE_RATE
+            val tNote = (i % noteLen).toDouble() / SAMPLE_RATE
+            val decay = if (noteIdx == notes.size - 1) {
+                exp(-2.2 * ((i - 3 * noteLen).toDouble() / SAMPLE_RATE))
+            } else {
+                exp(-1.5 * tNote)
+            }
+            val wave = (sin(2.0 * PI * freq * t) + 0.35 * sin(2.0 * PI * freq * 2.0 * t)) * decay
+            samples[i] = (wave.coerceIn(-1.0, 1.0) * 28000).toInt().toShort()
+        }
+        return samples
+    }
+
+    private fun generateFinalLapFanfare(): ShortArray {
+        val durationMs = 800
+        val total = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+        val samples = ShortArray(total)
+        for (i in 0 until total) {
+            val t = i.toDouble() / SAMPLE_RATE
+            val note = when {
+                i < total * 0.25 -> 783.99
+                i < total * 0.50 -> 1046.50
+                else -> 1567.98
+            }
+            val vibrato = 1.0 + 0.02 * sin(2.0 * PI * 12.0 * t)
+            val env = exp(-3.0 * (t % 0.25))
+            val wave = sin(2.0 * PI * note * vibrato * t) * env
+            samples[i] = (wave * 26000).toInt().toShort()
+        }
+        return samples
+    }
+
+    private fun generateBalloonPop(): ShortArray {
+        val durationMs = 280
+        val total = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+        val samples = ShortArray(total)
+        val rnd = Random(42)
+
+        for (i in 0 until total) {
+            val t = i.toDouble() / SAMPLE_RATE
+            val env = exp(-18.0 * t)
+            val noise = (rnd.nextDouble() * 2.0 - 1.0)
+            val thump = sin(2.0 * PI * (140.0 * (1.0 - t * 3.0)) * t)
+            val wave = (0.7 * noise + 0.5 * thump) * env
+            samples[i] = (wave.coerceIn(-1.0, 1.0) * 28000).toInt().toShort()
+        }
+        return samples
+    }
+
+    private fun generateMenuSelect(): ShortArray {
+        val durationMs = 45
+        val total = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+        val samples = ShortArray(total)
+        for (i in 0 until total) {
+            val t = i.toDouble() / SAMPLE_RATE
+            val env = 1.0 - (i.toDouble() / total)
+            val wave = sin(2.0 * PI * 880.0 * t) * env
+            samples[i] = (wave * 24000).toInt().toShort()
+        }
+        return samples
+    }
+
+    private fun generateMenuConfirm(): ShortArray {
+        val durationMs = 120
+        val total = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+        val samples = ShortArray(total)
+        val half = total / 2
+        for (i in 0 until total) {
+            val t = i.toDouble() / SAMPLE_RATE
+            val freq = if (i < half) 659.25 else 987.77
+            val env = 1.0 - ((i % half).toDouble() / half)
+            val wave = (sin(2.0 * PI * freq * t) + 0.25 * sin(2.0 * PI * freq * 2.0 * t)) * env
+            samples[i] = (wave * 26000).toInt().toShort()
+        }
+        return samples
+    }
+
+    private fun generateWrongWay(): ShortArray {
+        val durationMs = 350
+        val total = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+        val samples = ShortArray(total)
+        for (i in 0 until total) {
+            val t = i.toDouble() / SAMPLE_RATE
+            val pulse = if ((i / (SAMPLE_RATE * 0.08).toInt()) % 2 == 0) 1.0 else 0.0
+            val wave = sin(2.0 * PI * 220.0 * t) * pulse
+            samples[i] = (wave * 27000).toInt().toShort()
+        }
+        return samples
+    }
+
+    private fun generateRocketStart(): ShortArray {
+        val durationMs = 900
+        val total = (SAMPLE_RATE * (durationMs / 1000.0)).toInt()
+        val samples = ShortArray(total)
+        val rnd = Random(99)
+        for (i in 0 until total) {
+            val t = i.toDouble() / SAMPLE_RATE
+            val progress = t / (durationMs / 1000.0)
+            val sweepFreq = 80.0 + progress * 320.0
+            val noise = (rnd.nextDouble() * 2.0 - 1.0) * 0.4
+            val tone = sin(2.0 * PI * sweepFreq * t) * 0.6
+            val env = if (progress < 0.2) progress / 0.2 else exp(-2.5 * (progress - 0.2))
+            val wave = (tone + noise) * env
+            samples[i] = (wave.coerceIn(-1.0, 1.0) * 28000).toInt().toShort()
         }
         return samples
     }
