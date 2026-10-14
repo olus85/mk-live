@@ -27,6 +27,7 @@ import com.example.mklive.ui.main.CockpitScreen
 import com.example.mklive.ui.main.CockpitViewModel
 import com.example.mklive.ui.menu.GarageScreen
 import com.example.mklive.ui.menu.MainMenuScreen
+import com.example.mklive.ui.menu.ModeSelectScreen
 import com.example.mklive.ui.menu.TrackSelectScreen
 import com.example.mklive.ui.victory.VictoryScreen
 import com.example.mklive.util.LocaleHelper
@@ -84,6 +85,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     when (gameState) {
                         GameState.MAIN_MENU -> MainMenuScreen(viewModel = viewModel)
+                        GameState.MODE_SELECT -> ModeSelectScreen(viewModel = viewModel)
                         GameState.GARAGE -> GarageScreen(viewModel = viewModel)
                         GameState.TRACK_SELECT -> TrackSelectScreen(viewModel = viewModel)
                         GameState.IN_GAME -> CockpitScreen(viewModel = viewModel)
@@ -172,16 +174,16 @@ class MainActivity : ComponentActivity() {
                 GameState.MAIN_MENU -> {
                     when (keyCode) {
                         KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_START -> {
-                            viewModel.startRace()
+                            viewModel.navigateTo(GameState.GARAGE)
                             triggerHapticFeedback(45)
                             return true
                         }
-                        KeyEvent.KEYCODE_BUTTON_Y -> {
-                            viewModel.navigateTo(GameState.GARAGE)
+                        KeyEvent.KEYCODE_BUTTON_X -> {
+                            viewModel.navigateTo(GameState.MODE_SELECT)
                             triggerHapticFeedback(30)
                             return true
                         }
-                        KeyEvent.KEYCODE_BUTTON_X -> {
+                        KeyEvent.KEYCODE_BUTTON_Y -> {
                             viewModel.navigateTo(GameState.TRACK_SELECT)
                             triggerHapticFeedback(30)
                             return true
@@ -193,7 +195,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                GameState.GARAGE, GameState.TRACK_SELECT, GameState.VICTORY -> {
+                GameState.MODE_SELECT -> {
                     when (keyCode) {
                         KeyEvent.KEYCODE_BUTTON_B -> {
                             viewModel.navigateTo(GameState.MAIN_MENU)
@@ -201,11 +203,35 @@ class MainActivity : ComponentActivity() {
                             return true
                         }
                         KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_START -> {
-                            if (currentState == GameState.TRACK_SELECT || currentState == GameState.VICTORY) {
-                                viewModel.startRace()
-                            } else {
-                                viewModel.navigateTo(GameState.MAIN_MENU)
-                            }
+                            viewModel.navigateTo(GameState.GARAGE)
+                            triggerHapticFeedback(45)
+                            return true
+                        }
+                    }
+                }
+                GameState.GARAGE -> {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_BUTTON_B -> {
+                            viewModel.navigateTo(GameState.MAIN_MENU)
+                            triggerHapticFeedback(35)
+                            return true
+                        }
+                        KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_START -> {
+                            viewModel.navigateTo(GameState.TRACK_SELECT)
+                            triggerHapticFeedback(45)
+                            return true
+                        }
+                    }
+                }
+                GameState.TRACK_SELECT, GameState.VICTORY -> {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_BUTTON_B -> {
+                            viewModel.navigateTo(if (currentState == GameState.TRACK_SELECT) GameState.GARAGE else GameState.MAIN_MENU)
+                            triggerHapticFeedback(35)
+                            return true
+                        }
+                        KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_START -> {
+                            viewModel.startRace()
                             triggerHapticFeedback(45)
                             return true
                         }

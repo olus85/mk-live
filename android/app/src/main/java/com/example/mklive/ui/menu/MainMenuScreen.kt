@@ -1,421 +1,424 @@
 package com.example.mklive.ui.menu
 
-import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mklive.game.GameMode
+import com.example.mklive.R
 import com.example.mklive.game.GameState
+import com.example.mklive.ui.common.GameAssetHelper
 import com.example.mklive.ui.main.CockpitViewModel
+import com.example.mklive.ui.pairing.PairingDialog
+import com.example.mklive.ui.settings.SettingsDialog
 
 @Composable
-fun MainMenuScreen(
-    viewModel: CockpitViewModel,
-    modifier: Modifier = Modifier
-) {
-    val selectedMode by viewModel.selectedMode.collectAsState()
+fun MainMenuScreen(viewModel: CockpitViewModel) {
     val selectedCharacter by viewModel.selectedCharacter.collectAsState()
     val selectedSpeedClass by viewModel.selectedSpeedClass.collectAsState()
     val selectedTrack by viewModel.selectedTrack.collectAsState()
     val kartInfo by viewModel.kartInfo.collectAsState()
-    val openKartState by viewModel.openKartState.collectAsState()
-    val isStreamConnected by viewModel.mjpegPlayer.isConnected.collectAsState()
-    val videoFps by viewModel.mjpegPlayer.fps.collectAsState()
+    val isKartConnected = kartInfo.character != null
     val hostIp by viewModel.hostIp.collectAsState()
+    val videoMode by viewModel.videoMode.collectAsState()
+    val recordOverlayEnabled by viewModel.recordOverlayEnabled.collectAsState()
+    val recordAudioEnabled by viewModel.recordAudioEnabled.collectAsState()
+    val recordColorSwapEnabled by viewModel.recordColorSwapEnabled.collectAsState()
+    val arEnabled by viewModel.arEnabled.collectAsState()
+    val sfxEnabled by viewModel.sfxEnabled.collectAsState()
+    val engineSoundEnabled by viewModel.engineSoundEnabled.collectAsState()
+    val isVrMode by viewModel.isVrMode.collectAsState()
+    val currentLanguage by viewModel.currentLanguage.collectAsState()
+    val serverQrBitmap by viewModel.serverQrBitmap.collectAsState()
+    val serverPairingSsid by viewModel.serverPairingSsid.collectAsState()
+    val serverPairingChannel by viewModel.serverPairingChannel.collectAsState()
+    val isSettingsOpen by viewModel.isSettingsOpen.collectAsState()
+    val isPairingOpen by viewModel.isPairingOpen.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
-    // Pulse animation for Start Button
+    // Breathing pulse animation for the "SPIELEN" button
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseColor by infiniteTransition.animateColor(
-        initialValue = Color(0xFF00E5FF),
-        targetValue = Color(0xFFFF1744),
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.04f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200),
+            animation = tween(900, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "pulseColor"
+        label = "pulseScale"
     )
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF0A0E17),
-                        Color(0xFF101826),
-                        Color(0xFF05080F)
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Fullscreen 3D Living Room Racing Background
+        Image(
+            painter = painterResource(id = R.drawable.bg_title_art),
+            contentDescription = "Title Art",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // 2. Cinematic Gradient Overlay (Darkens top & bottom for high contrast)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xCC050A14),
+                            Color(0x22050A14),
+                            Color(0x33050A14),
+                            Color(0xF0050A14)
+                        )
                     )
                 )
-            )
-    ) {
+        )
+
+        // 3. Foreground UI Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 14.dp),
+                .padding(horizontal = 36.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // 🌟 1. HEADER: Arcade Title Banner + Live Kart Telemetry Status Pill
+            // TOP BAR: Title & Kart Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Title & Subtitle
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                // Game Title Banner
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = Color(0xFFE52521),
+                        shape = RoundedCornerShape(12.dp),
+                        shadowElevation = 8.dp
+                    ) {
                         Text(
-                            text = "MARIO KART LIVE",
-                            color = Color(0xFFFFD54F),
-                            fontSize = 24.sp,
+                            text = "MARIO KART",
+                            color = Color.White,
                             fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace,
-                            fontStyle = FontStyle.Italic,
-                            letterSpacing = 1.sp
+                            fontSize = 22.sp,
+                            fontFamily = FontFamily.SansSerif,
+                            letterSpacing = 2.sp,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Surface(
-                            color = Color(0xFFE52521),
-                            shape = RoundedCornerShape(4.dp)
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "LIVE",
+                        color = Color(0xFFFFD54F),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 26.sp,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = 2.sp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        color = Color(0xCC00E5FF),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = "HOME CIRCUIT",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                // Status & Pairing Button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Kart Status Pill
+                    Surface(
+                        color = Color(0xDD0A101C),
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.dp, if (isKartConnected) Color(0xFF00E676) else Color(0x55FFFFFF))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isKartConnected) Color(0xFF00E676) else Color(0xFFFFA000))
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "AR PRO",
+                                text = if (isKartConnected) "KART BEREIT ($hostIp)" else "DEMO MODUS (Offline)",
                                 color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Black,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace
                             )
                         }
                     }
-                    Text(
-                        text = "HOME CIRCUIT • NEXT-GEN MIXED REALITY EDITION",
-                        color = Color(0xFF80D8FF),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.2.sp
-                    )
-                }
 
-                // Live Kart Telemetry Pill
+                    // Quick Kart Pairing Button
+                    Surface(
+                        onClick = { viewModel.openPairing() },
+                        color = Color(0xDD121B2B),
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.dp, Color(0xFF00E5FF))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("🔗", fontSize = 13.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "KOPPELN",
+                                color = Color(0xFF00E5FF),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+            }
+
+            // CENTER: Active Setup Summary Chip (Tap to change)
+            Surface(
+                onClick = { viewModel.navigateTo(GameState.GARAGE) },
+                color = Color(0xCC0B1424),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.5.dp, Color(0x6600E5FF)),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Character Avatar
+                    Image(
+                        painter = painterResource(id = GameAssetHelper.getDrawableResId(selectedCharacter.drawableResName)),
+                        contentDescription = selectedCharacter.characterName,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                    )
+                    Text(
+                        text = selectedCharacter.characterName,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Text("•", color = Color(0x66FFFFFF), fontSize = 14.sp)
+                    Text(
+                        text = selectedSpeedClass.label,
+                        color = Color(0xFFFFD54F),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text("•", color = Color(0x66FFFFFF), fontSize = 14.sp)
+                    Text(
+                        text = selectedTrack.name,
+                        color = Color(0xFF00E5FF),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Surface(
+                        color = Color(0x3300E5FF),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "ÄNDERN ▾",
+                            color = Color(0xFF80D8FF),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+            }
+
+            // BOTTOM BAR: The 3 Big Primary Nintendo Action Buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(96.dp),
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 1. SPIELEN (Main Hero Button - Large, Pulsing, Vibrant)
                 Surface(
-                    color = Color(0xDD151E28),
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, if (kartInfo.character != null) Color(0xFF00E676) else Color(0x66FFFFFF))
+                    onClick = { viewModel.navigateTo(GameState.GARAGE) },
+                    modifier = Modifier
+                        .weight(1.5f)
+                        .fillMaxHeight()
+                        .scale(pulseScale),
+                    color = Color(0xFFE52521),
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(2.5.dp, Color(0xFFFFD54F)),
+                    shadowElevation = 14.dp
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 24.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        // Connection Dot
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(if (isStreamConnected) Color(0xFF00E676) else Color(0xFFFF5252))
-                        )
-                        Text(
-                            text = if (isStreamConnected) "KART ONLINE (${hostIp})" else "CONNECTING... (${hostIp})",
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        )
-                        if (kartInfo.battery != null) {
+                        Text(text = "🏁", fontSize = 38.sp)
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Column {
                             Text(
-                                text = "🔋 ${kartInfo.battery}%",
-                                color = if ((kartInfo.battery ?: 0) > 20) Color(0xFF00E676) else Color(0xFFFF5252),
+                                text = "SPIELEN",
+                                color = Color.White,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp
+                            )
+                            Text(
+                                text = "Fahrer & Strecke wählen",
+                                color = Color(0xFFFFD54F),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // 2. SPIELMODI (Grand Prix, Ballonschlacht, Zeitfahren, Editor)
+                Surface(
+                    onClick = { viewModel.navigateTo(GameState.MODE_SELECT) },
+                    modifier = Modifier
+                        .weight(1.2f)
+                        .fillMaxHeight(),
+                    color = Color(0xFF0277BD),
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(2.dp, Color(0xFF40C4FF)),
+                    shadowElevation = 8.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = "🏆", fontSize = 32.sp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "SPIELMODI",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = "GP, Ballons, Editor",
+                                color = Color(0xFF80D8FF),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // 3. EINSTELLUNGEN (Options, Controls, Audio)
+                Surface(
+                    onClick = { viewModel.openSettings() },
+                    modifier = Modifier
+                        .weight(1.0f)
+                        .fillMaxHeight(),
+                    color = Color(0xFF1E2838),
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(1.5.dp, Color(0x8890A4AE)),
+                    shadowElevation = 6.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = "⚙️", fontSize = 28.sp)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "OPTIONEN",
+                                color = Color.White,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                            Text(
+                                text = "Audio, VR, Steuerung",
+                                color = Color(0x99FFFFFF),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Text(
-                            text = "⚡ ${videoFps} FPS",
-                            color = Color(0xFF00E5FF),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        )
-                    }
-                }
-            }
-
-            // 🌟 2. GAME MODE SELECTION (Interactive Cards)
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "SELECT GAME MODE / SPIELMODUS WÄHLEN",
-                    color = Color(0x99FFFFFF),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    items(GameMode.values()) { mode ->
-                        val isSelected = mode == selectedMode
-                        val cardBorder = if (isSelected) Color(0xFF00E5FF) else Color(0x33FFFFFF)
-                        val cardBg = if (isSelected) Color(0xEE1A2938) else Color(0xCC111822)
-
-                        Surface(
-                            modifier = Modifier
-                                .width(220.dp)
-                                .height(150.dp)
-                                .clickable { viewModel.selectMode(mode) },
-                            shape = RoundedCornerShape(12.dp),
-                            color = cardBg,
-                            border = BorderStroke(if (isSelected) 2.dp else 1.dp, cardBorder)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(14.dp),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(text = mode.icon, fontSize = 28.sp)
-                                    if (isSelected) {
-                                        Surface(
-                                            color = Color(0xFF00E5FF),
-                                            shape = RoundedCornerShape(4.dp)
-                                        ) {
-                                            Text(
-                                                text = "ACTIVE",
-                                                color = Color.Black,
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Black,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Column {
-                                    Text(
-                                        text = mode.titleDe,
-                                        color = if (isSelected) Color(0xFF00E5FF) else Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = FontFamily.SansSerif
-                                    )
-                                    Spacer(modifier = Modifier.height(3.dp))
-                                    Text(
-                                        text = mode.descDe,
-                                        color = Color(0xBBFFFFFF),
-                                        fontSize = 10.sp,
-                                        lineHeight = 13.sp,
-                                        maxLines = 3
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 🌟 3. ACTIVE SETUP SUMMARY (Character • Speed Class • Selected Track)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0x880C141F), RoundedCornerShape(10.dp))
-                    .border(1.dp, Color(0x4400E5FF), RoundedCornerShape(10.dp))
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Character pill
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = selectedCharacter.avatarIcon, fontSize = 20.sp)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Column {
-                        Text(text = "FAHRER", color = Color(0x88FFFFFF), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        Text(text = selectedCharacter.characterName, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-
-                Text("•", color = Color(0x44FFFFFF))
-
-                // Engine Class
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "⚙️", fontSize = 18.sp)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Column {
-                        Text(text = "KLASSE", color = Color(0x88FFFFFF), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        Text(text = selectedSpeedClass.label, color = Color(0xFFFFD54F), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-
-                Text("•", color = Color(0x44FFFFFF))
-
-                // Track
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "🏁", fontSize = 18.sp)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Column {
-                        Text(text = "STRECKE", color = Color(0x88FFFFFF), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        Text(text = selectedTrack.name, color = Color(0xFF80D8FF), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-
-            // 🌟 4. BOTTOM ACTION BAR (Garage, Tracks, Settings, Pairing & Big Launch Button)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Left Quick Buttons
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    // Garage Button
-                    Surface(
-                        onClick = { viewModel.navigateTo(GameState.GARAGE) },
-                        color = Color(0xCC182230),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0x6600E5FF)),
-                        modifier = Modifier.height(44.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("🏎️", fontSize = 15.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("GARAGE", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    // Track Select Button
-                    Surface(
-                        onClick = { viewModel.navigateTo(GameState.TRACK_SELECT) },
-                        color = Color(0xCC182230),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0x6600E5FF)),
-                        modifier = Modifier.height(44.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("🗺️", fontSize = 15.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("STRECKEN", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    // Settings Button
-                    Surface(
-                        onClick = { viewModel.openSettings() },
-                        color = Color(0xCC182230),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0x66FFFFFF)),
-                        modifier = Modifier.height(44.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("⚙️", fontSize = 15.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("SETTINGS", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    // Pairing QR Button
-                    Surface(
-                        onClick = { viewModel.openPairing() },
-                        color = Color(0xCC182230),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0x66FFD54F)),
-                        modifier = Modifier.height(44.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("🔗", fontSize = 15.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("KOPPELN", color = Color(0xFFFFD54F), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                // Big Glowing "START RACE" Button
-                Surface(
-                    onClick = { viewModel.startRace() },
-                    color = pulseColor,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.height(46.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("🏁", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (selectedMode == GameMode.TRACK_BUILDER) "EDITOR STARTEN" else "RENNEN STARTEN",
-                            color = Color.Black,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace
-                        )
                     }
                 }
             }
         }
+    }
+
+    // Modal Dialogs
+    if (isSettingsOpen) {
+        SettingsDialog(
+            currentHostIp = hostIp,
+            currentVideoMode = videoMode,
+            isRecordingOverlay = recordOverlayEnabled,
+            isRecordingAudio = recordAudioEnabled,
+            isRecordingColorSwap = recordColorSwapEnabled,
+            isArEnabled = arEnabled,
+            isSfxEnabled = sfxEnabled,
+            isEngineSoundEnabled = engineSoundEnabled,
+            isVrMode = isVrMode,
+            currentLanguage = currentLanguage,
+            onSetRecordingOverlay = { viewModel.setRecordingOverlay(it) },
+            onSetRecordingAudio = { viewModel.setRecordingAudio(it) },
+            onSetRecordingColorSwap = { viewModel.setRecordingColorSwap(it) },
+            onSetArEnabled = { viewModel.setArEnabled(it) },
+            onSetSfxEnabled = { viewModel.setSfxEnabled(it) },
+            onSetEngineSoundEnabled = { viewModel.setEngineSoundEnabled(it) },
+            onSetVrMode = { viewModel.setVrMode(it) },
+            onSetLanguage = { viewModel.setLanguage(context, it) },
+            onSave = { newIp, newMode -> viewModel.saveSettings(newIp, newMode) },
+            onDismiss = { viewModel.closeSettings() }
+        )
+    }
+
+    if (isPairingOpen) {
+        PairingDialog(
+            serverQrBitmap = serverQrBitmap,
+            serverPairingSsid = serverPairingSsid,
+            serverPairingChannel = serverPairingChannel,
+            onChannelSelected = { ch -> viewModel.triggerPairing(channel = ch, forceNew = true) },
+            onTriggerNewCode = { ch -> viewModel.triggerPairing(channel = ch, forceNew = true) },
+            onDismiss = { viewModel.closePairing() }
+        )
     }
 }

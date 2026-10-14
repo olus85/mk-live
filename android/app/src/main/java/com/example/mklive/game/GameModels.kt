@@ -3,41 +3,53 @@ package com.example.mklive.game
 /**
  * Game Modes available in Mario Kart Live AR.
  */
-enum class GameMode(val titleDe: String, val titleEn: String, val icon: String, val descDe: String, val descEn: String) {
+enum class GameMode(
+    val titleDe: String,
+    val titleEn: String,
+    val icon: String,
+    val descDe: String,
+    val descEn: String,
+    val drawableResName: String
+) {
     GRAND_PRIX(
-        "Grand Prix (3 Runden GP)",
-        "Grand Prix (3 Laps GP)",
+        "Grand Prix",
+        "Grand Prix",
         "🏆",
-        "Klassisches Rennen mit Startampel, Checkpoints, Rivalen-Geist & Siegerehrung!",
-        "Classic race with countdown lights, checkpoints, rival ghost & podium victory!"
+        "3 Runden • Ampelstart • Siegerehrung",
+        "3 Laps • Countdown • Podium",
+        "art_mode_grand_prix"
     ),
     BALLOON_BATTLE(
         "Ballon-Schlacht",
         "Balloon Battle",
         "🎈",
-        "3 Ballons beschützen! Weiche Fallen aus und zerstöre virtuelle Kampfdrohnen!",
-        "Protect 3 balloons! Dodge hazards and blast virtual combat drones!"
+        "3 Ballons schützen • Drohnenkampf",
+        "Protect 3 balloons • Combat drones",
+        "art_mode_balloon_battle"
     ),
     TIME_TRIAL(
-        "Zeitfahren (Ghost Run)",
-        "Time Trial (Ghost Run)",
+        "Zeitfahren",
+        "Time Trial",
         "⏱️",
-        "Fahre gegen deinen eigenen Hologramm-Geist und jage die absolute Bestzeit!",
-        "Race against your holographic ghost and chase the track record!"
+        "Hologramm-Geist • Rundenrekord",
+        "Hologram ghost • Track record",
+        "art_mode_time_trial"
     ),
     TRACK_BUILDER(
         "Streckeneditor",
         "Track Builder",
         "🛠️",
-        "Fahre durch den Raum, platziere Tore, Turbostreifen & Münzen und speichere deine Strecke!",
-        "Drive through your room, drop gates, dash pads & coins, then save your custom track!"
+        "Tore & Turbos im Raum platzieren",
+        "Drop gates & pads in your room",
+        "art_mode_track_builder"
     ),
     FREE_ROAM(
-        "Freie Fahrt / Cockpit",
-        "Free Roam / Cockpit",
+        "Freie Fahrt",
+        "Free Roam",
         "🏎️",
-        "Entspanntes Fahren mit freier Waffenwahl und Zielübungen.",
-        "Casual driving with unlimited weapons and target practice."
+        "Freies Fahren & Zielübungen",
+        "Casual driving & practice",
+        "art_char_mario"
     )
 }
 
@@ -46,6 +58,7 @@ enum class GameMode(val titleDe: String, val titleEn: String, val icon: String, 
  */
 enum class GameState {
     MAIN_MENU,
+    MODE_SELECT,
     GARAGE,
     TRACK_SELECT,
     IN_GAME,
@@ -76,12 +89,22 @@ enum class SpeedClass(val label: String, val maxSpeedMps: Float, val boostSpeedM
 /**
  * Character & Kart Profiles.
  */
-enum class CharacterProfile(val characterName: String, val avatarIcon: String, val primaryColorHex: String, val badgeText: String) {
-    MARIO("Mario", "🏎️", "#E52521", "Allrounder"),
-    LUIGI("Luigi", "🏎️", "#00A82D", "Agile Kurven"),
-    PEACH("Peach", "👑", "#FF69B4", "Top Speed"),
-    BOWSER("Bowser", "🔥", "#FF8C00", "Schwerer Rammer"),
-    CYBER_KART("Cyber Kart", "⚡", "#00E5FF", "AR High-Tech")
+enum class CharacterProfile(
+    val characterName: String,
+    val avatarIcon: String,
+    val primaryColorHex: String,
+    val badgeText: String,
+    val drawableResName: String,
+    val speedRating: Int,     // 1..5
+    val accelRating: Int,     // 1..5
+    val handlingRating: Int   // 1..5
+) {
+    MARIO("Mario", "🏎️", "#E52521", "Allrounder", "art_char_mario", 4, 4, 4),
+    LUIGI("Luigi", "🏎️", "#00A82D", "Agil & Wendig", "art_char_luigi", 3, 5, 4),
+    PEACH("Peach", "👑", "#FF69B4", "Top Kurvenlage", "art_char_peach", 3, 4, 5),
+    BOWSER("Bowser", "🔥", "#FF8C00", "Schwerer Rammer", "art_char_bowser", 5, 2, 3),
+    YOSHI("Yoshi", "🦖", "#76FF03", "Turbo Starter", "art_char_yoshi", 4, 5, 4),
+    CYBER_KART("Cyber Kart", "⚡", "#00E5FF", "Laser Boost", "art_char_cyber", 5, 4, 3)
 }
 
 /**

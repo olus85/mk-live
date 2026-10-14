@@ -19,6 +19,7 @@ data class TrackPreset(
     val name: String,
     val cup: String,
     val difficulty: String,
+    val drawableResName: String,
     val elements: List<TrackElementData>
 )
 
@@ -32,6 +33,7 @@ object TrackManager {
                 name = "Mushroom Cup: Living Room GP",
                 cup = "🍄 Mushroom Cup",
                 difficulty = "★☆☆",
+                drawableResName = "art_cup_mushroom",
                 elements = listOf(
                     // Straightaway 1: Coins
                     TrackElementData("COIN", 0.0f, 0.9f),
@@ -63,6 +65,7 @@ object TrackManager {
                 name = "Flower Cup: Nitro Oval",
                 cup = "🌸 Flower Cup",
                 difficulty = "★★☆",
+                drawableResName = "art_cup_flower",
                 elements = listOf(
                     TrackElementData("DASH_PAD", 0.0f, 1.2f),
                     TrackElementData("COIN", 0.0f, 2.2f),
@@ -83,6 +86,7 @@ object TrackManager {
                 name = "Star Cup: Combat Coliseum",
                 cup = "⭐ Star Cup",
                 difficulty = "★★★",
+                drawableResName = "art_cup_star",
                 elements = listOf(
                     TrackElementData("ITEM_BOX", -0.6f, 2.0f),
                     TrackElementData("ITEM_BOX", 0.6f, 2.0f),
@@ -162,7 +166,7 @@ object TrackManager {
                         )
                     }
                 }
-                list.add(TrackPreset(id, name, cup, difficulty, elemList))
+                list.add(TrackPreset(id, name, cup, difficulty, "art_mode_track_builder", elemList))
             } catch (_: Exception) {}
         }
         return list
