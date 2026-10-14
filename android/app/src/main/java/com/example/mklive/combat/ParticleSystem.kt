@@ -5,6 +5,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Rect
+import com.example.mklive.ar.ArAssets
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.PI
 import kotlin.math.cos
@@ -15,6 +17,7 @@ enum class ParticleType {
     GOLD_STAR,
     SHARD,
     EXPLOSION_SPARK,
+    EXPLOSION_BURST,
     SMOKE,
     MUZZLE_FLASH,
     SPEED_LINE
@@ -94,6 +97,9 @@ class ParticleSystem {
                     p.vy -= 15f * dt // Upward rise
                     p.size += 20f * dt // Expanding smoke
                 }
+                ParticleType.EXPLOSION_BURST -> {
+                    p.size += 120f * dt // Expanding comic shockwave
+                }
                 ParticleType.SPEED_LINE -> {
                     p.size += 300f * dt
                 }
@@ -172,6 +178,22 @@ class ParticleSystem {
 
     fun emitExplosion(screenX: Float, screenY: Float) {
         triggerScreenShake(20f)
+
+        // Comic 3D shockwave burst
+        particles.add(
+            Particle(
+                x = screenX,
+                y = screenY,
+                vx = 0f,
+                vy = 0f,
+                size = 60f,
+                color = Color.WHITE,
+                alpha = 1.0f,
+                lifeSec = 0.45f,
+                maxLifeSec = 0.45f,
+                type = ParticleType.EXPLOSION_BURST
+            )
+        )
 
         // Fire sparks
         val sparkCount = 28
@@ -283,26 +305,45 @@ class ParticleSystem {
 
             when (p.type) {
                 ParticleType.GOLD_STAR -> {
-                    fillPaint.color = Color.argb(
-                        alphaInt,
-                        Color.red(p.color),
-                        Color.green(p.color),
-                        Color.blue(p.color)
-                    )
-                    // Draw 4-point star
-                    val s = p.size
-                    val path = Path().apply {
-                        moveTo(p.x, p.y - s)
-                        lineTo(p.x + s * 0.3f, p.y - s * 0.3f)
-                        lineTo(p.x + s, p.y)
-                        lineTo(p.x + s * 0.3f, p.y + s * 0.3f)
-                        lineTo(p.x, p.y + s)
-                        lineTo(p.x - s * 0.3f, p.y + s * 0.3f)
-                        lineTo(p.x - s, p.y)
-                        lineTo(p.x - s * 0.3f, p.y - s * 0.3f)
-                        close()
+                    val bmp = ArAssets.sparklesBitmap
+                    if (bmp != null) {
+                        val s = p.size * 1.4f
+                        val dstRect = RectF(p.x - s, p.y - s, p.x + s, p.y + s)
+                        val srcRect = Rect(0, 0, bmp.width, bmp.height)
+                        fillPaint.alpha = alphaInt
+                        canvas.drawBitmap(bmp, srcRect, dstRect, fillPaint)
+                    } else {
+                        fillPaint.color = Color.argb(
+                            alphaInt,
+                            Color.red(p.color),
+                            Color.green(p.color),
+                            Color.blue(p.color)
+                        )
+                        val s = p.size
+                        val path = Path().apply {
+                            moveTo(p.x, p.y - s)
+                            lineTo(p.x + s * 0.3f, p.y - s * 0.3f)
+                            lineTo(p.x + s, p.y)
+                            lineTo(p.x + s * 0.3f, p.y + s * 0.3f)
+                            lineTo(p.x, p.y + s)
+                            lineTo(p.x - s * 0.3f, p.y + s * 0.3f)
+                            lineTo(p.x - s, p.y)
+                            lineTo(p.x - s * 0.3f, p.y - s * 0.3f)
+                            close()
+                        }
+                        canvas.drawPath(path, fillPaint)
                     }
-                    canvas.drawPath(path, fillPaint)
+                }
+
+                ParticleType.EXPLOSION_BURST -> {
+                    val bmp = ArAssets.explosionBitmap
+                    if (bmp != null) {
+                        val s = p.size
+                        val dstRect = RectF(p.x - s, p.y - s, p.x + s, p.y + s)
+                        val srcRect = Rect(0, 0, bmp.width, bmp.height)
+                        fillPaint.alpha = alphaInt
+                        canvas.drawBitmap(bmp, srcRect, dstRect, fillPaint)
+                    }
                 }
 
                 ParticleType.SHARD, ParticleType.EXPLOSION_SPARK -> {

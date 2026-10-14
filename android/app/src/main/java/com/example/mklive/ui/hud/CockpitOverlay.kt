@@ -1,5 +1,6 @@
 package com.example.mklive.ui.hud
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,11 +17,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -58,6 +63,7 @@ fun CockpitOverlay(
     onFireWeapon: () -> Unit = {},
     onCycleWeapon: () -> Unit = {},
     onDropGate: () -> Unit = {},
+    onResetTrack: () -> Unit = {},
     onRecordToggle: () -> Unit,
     onPairClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
@@ -65,64 +71,34 @@ fun CockpitOverlay(
     onResetHeading: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showQuickMenu by remember { mutableStateOf(false) }
+
     Box(modifier = modifier.fillMaxSize()) {
-        // TOP STATUS BAR
-        Row(
+        // TOP BAR ROW (Pinned components: Stats on Left, Status in Center, Controls on Right)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            // Brand & Chips
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // 1. TOP-LEFT: Brand & Race Stats (Coins & Lap)
+            Row(
+                modifier = Modifier.align(Alignment.TopStart),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = stringResource(R.string.hud_brand),
                     color = Color(0xFF00E5FF),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 14.sp,
                     fontFamily = FontFamily.Monospace
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-
-                // AP State Chip
-                HudChip(
-                    label = stringResource(R.string.hud_ap),
-                    value = openKartState.state,
-                    isOk = openKartState.ok && openKartState.state == "RUNNING",
-                    isWarn = openKartState.state == "PAIRING"
-                )
-                Spacer(modifier = Modifier.width(5.dp))
-
-                // Kart Link Chip
-                HudChip(
-                    label = stringResource(R.string.hud_link),
-                    value = (kartInfo.character ?: "KART").uppercase(),
-                    isOk = kartInfo.character != null
-                )
-                Spacer(modifier = Modifier.width(5.dp))
-
-                // Video FPS Chip
-                HudChip(
-                    label = stringResource(R.string.hud_video),
-                    value = "$videoFps FPS",
-                    isOk = videoFps >= 20,
-                    isWarn = videoFps in 1..19
-                )
-                Spacer(modifier = Modifier.width(5.dp))
-
-                // Battery Chip
-                BatteryChip(
-                    batteryLevel = kartInfo.battery ?: 0,
-                    isCableConnected = kartInfo.cable == true
                 )
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Coins Chip
+                // Coins Pill
                 Surface(
-                    color = Color(0xCC000000),
-                    shape = RoundedCornerShape(4.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD54F))
+                    color = Color(0xDD111111),
+                    shape = RoundedCornerShape(6.dp),
+                    border = BorderStroke(1.dp, Color(0xFFFFD54F))
                 ) {
                     Text(
                         text = "🪙 x${"%02d".format(coins)}",
@@ -130,16 +106,16 @@ fun CockpitOverlay(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(5.dp))
 
-                // Lap Chip
+                // Lap Pill
                 Surface(
-                    color = Color(0xCC000000),
-                    shape = RoundedCornerShape(4.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E5FF))
+                    color = Color(0xDD111111),
+                    shape = RoundedCornerShape(6.dp),
+                    border = BorderStroke(1.dp, Color(0xFF00E5FF))
                 ) {
                     Text(
                         text = "🏁 LAP $currentLap/3",
@@ -147,103 +123,187 @@ fun CockpitOverlay(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
                     )
-                }
-                Spacer(modifier = Modifier.width(5.dp))
-
-                // Active Item / Roulette Button
-                val itemLabel = if (isRouletteActive) "🎰 ${rouletteItem.icon}" else "${activeWeapon.icon} ${activeWeapon.displayName} (${ammo})"
-                Button(
-                    onClick = onFireWeapon,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isRouletteActive) Color(0xFFFF9100) else Color(0xCCFF1744)
-                    ),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text(itemLabel, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                }
-                Spacer(modifier = Modifier.width(5.dp))
-
-                // Cycle Weapon Button
-                Button(
-                    onClick = onCycleWeapon,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0x5537474F)),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text("🔄", fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                }
-                Spacer(modifier = Modifier.width(5.dp))
-
-                // Drop Checkpoint Gate Button
-                Button(
-                    onClick = onDropGate,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text("🚩 +TOR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
 
-            // Actions: VR Toggle, Record, Pair Kart & Settings
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // VR MODE BUTTON (Meta Quest 3 / SBS)
-                Button(
-                    onClick = onToggleVrMode,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EA)),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.height(32.dp)
+            // 2. TOP-CENTER: Compact Telemetry Status Pill
+            Surface(
+                modifier = Modifier.align(Alignment.TopCenter),
+                color = Color(0xCC0A0E14),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, Color(0x4400E5FF))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
                     Text(
-                        stringResource(R.string.hud_vr_mode),
+                        text = (kartInfo.character ?: "KART").uppercase(),
+                        color = if (kartInfo.character != null) Color(0xFF00E676) else Color(0x99FFFFFF),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text("•", color = Color(0x44FFFFFF), fontSize = 9.sp)
+                    Text(
+                        text = "$videoFps FPS",
+                        color = if (videoFps >= 20) Color.White else Color(0xFFFF9100),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text("•", color = Color(0x44FFFFFF), fontSize = 9.sp)
+                    BatteryChip(
+                        batteryLevel = kartInfo.battery ?: 0,
+                        isCableConnected = kartInfo.cable == true
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp))
+            }
 
-                // RECORD BUTTON
-                Button(
+            // 3. TOP-RIGHT: Controls Cluster (REC • Quick Actions • Settings ⚙️)
+            Row(
+                modifier = Modifier.align(Alignment.TopEnd),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Record Button
+                Surface(
                     onClick = onRecordToggle,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isRecording) Color(0xFFD50000) else Color(0x33263238)
-                    ),
-                    border = if (isRecording) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF5252)) else androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FF1744)),
-                    shape = RoundedCornerShape(4.dp),
+                    color = if (isRecording) Color(0xFFD50000) else Color(0xCC1E272C),
+                    shape = RoundedCornerShape(6.dp),
+                    border = BorderStroke(1.dp, if (isRecording) Color(0xFFFF5252) else Color(0x66FF1744)),
                     modifier = Modifier.height(32.dp)
                 ) {
-                    val mins = recordingDurationSec / 60
-                    val secs = recordingDurationSec % 60
-                    val timeStr = String.format(java.util.Locale.US, "%02d:%02d", mins, secs)
-                    if (isRecording) {
-                        Text("⏹ $timeStr", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    } else {
-                        Text(stringResource(R.string.hud_rec), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val mins = recordingDurationSec / 60
+                        val secs = recordingDurationSec % 60
+                        val timeStr = String.format(java.util.Locale.US, "%02d:%02d", mins, secs)
+                        if (isRecording) {
+                            Text("⏹ $timeStr", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        } else {
+                            Text("⏺ REC", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.width(6.dp))
 
-                Button(
-                    onClick = onPairClicked,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00B0FF)),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text(stringResource(R.string.hud_pair_kart), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                // Quick Actions Dropdown Menu Button
+                Box {
+                    Surface(
+                        onClick = { showQuickMenu = !showQuickMenu },
+                        color = Color(0xCC1E272C),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, Color(0x6600E5FF)),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 9.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("🏎️ ACTIONS ▾", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = showQuickMenu,
+                        onDismissRequest = { showQuickMenu = false },
+                        modifier = Modifier.background(Color(0xF510161C))
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("🚩 Checkpoint-Tor platzieren", color = Color.White, fontSize = 12.sp) },
+                            onClick = {
+                                showQuickMenu = false
+                                onDropGate()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("🔄 AR-Strecke vor Kart zentrieren", color = Color(0xFFFFD54F), fontSize = 12.sp) },
+                            onClick = {
+                                showQuickMenu = false
+                                onResetTrack()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("🥽 VR-Modus (Quest / SBS)", color = Color(0xFFB388FF), fontSize = 12.sp) },
+                            onClick = {
+                                showQuickMenu = false
+                                onToggleVrMode()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("🔗 Kart koppeln (QR-Code)", color = Color(0xFF80D8FF), fontSize = 12.sp) },
+                            onClick = {
+                                showQuickMenu = false
+                                onPairClicked()
+                            }
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.width(6.dp))
 
-                Button(
+                // Settings Button (Always pinned and fully visible!)
+                Surface(
                     onClick = onSettingsClicked,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37474F)),
-                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xCC263238),
+                    shape = RoundedCornerShape(6.dp),
+                    border = BorderStroke(1.dp, Color(0x8890A4AE)),
                     modifier = Modifier.height(32.dp)
                 ) {
-                    Text(stringResource(R.string.hud_settings), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("⚙️", fontSize = 12.sp)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.hud_settings), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+        }
+
+        // MARIO KART ITEM SLOT (Top-Left under Stats - tap to use weapon!)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 46.dp)
+        ) {
+            val itemBorderColor = when {
+                isRouletteActive -> Color(0xFFFF9100)
+                activeWeapon != WeaponType.NONE -> Color(0xFFFF1744)
+                else -> Color(0x44FFFFFF)
+            }
+
+            Surface(
+                onClick = onFireWeapon,
+                color = Color(0xDD12161A),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.5.dp, itemBorderColor),
+                modifier = Modifier.size(54.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    if (isRouletteActive) {
+                        Text(rouletteItem.icon, fontSize = 24.sp)
+                    } else if (activeWeapon != WeaponType.NONE) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(activeWeapon.icon, fontSize = 20.sp)
+                            Text(
+                                text = "x$ammo",
+                                color = Color(0xFFFFD54F),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+                    } else {
+                        Text("🎲", fontSize = 18.sp, color = Color(0x44FFFFFF))
+                    }
                 }
             }
         }

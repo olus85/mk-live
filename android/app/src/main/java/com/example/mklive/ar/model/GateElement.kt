@@ -3,8 +3,10 @@ package com.example.mklive.ar.model
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
+import com.example.mklive.ar.ArAssets
 import com.example.mklive.ar.ArGeometry
 import kotlin.math.PI
 import kotlin.math.sin
@@ -20,37 +22,17 @@ class GateElement(
     y: Float,
     val gateNumber: Int, // 1, 2, 3, 4
     val isFinishLine: Boolean = false
-) : ArElement(id, x, y, z = 0f, hitRadius = 0.45f, type = ArElementType.GATE) {
+) : ArElement(id, x, y, z = 0f, hitRadius = 0.60f, type = ArElementType.GATE) {
 
     var isPassedThisLap = false
     private var arrowPulse = 0f
 
     companion object {
-        private val pillarPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#455A64")
-            style = Paint.Style.FILL
-        }
-
-        private val bannerBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb(0xEE, 0x1A, 0x23, 0x7E)
-            style = Paint.Style.FILL
-        }
-
-        private val finishBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb(0xEE, 0xB7, 0x1C, 0x1C)
-            style = Paint.Style.FILL
-        }
-
-        private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#00E5FF")
-            style = Paint.Style.STROKE
-            strokeWidth = 3f
-        }
-
         private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
+            setShadowLayer(4f, 0f, 0f, Color.BLACK)
         }
 
         private val arrowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -76,35 +58,33 @@ class GateElement(
         val cy = proj.screenY
         val scale = proj.scale
 
-        val gateW = 90f * scale
-        val gateH = 70f * scale
-        val pillarW = 8f * scale
+        val gateW = 100f * scale
+        val gateH = 80f * scale
 
         if (gateW < 10f) return
 
-        // 1. Left and Right Support Pillars (from ground up)
-        val leftPillar = RectF(cx - gateW / 2f, cy - gateH, cx - gateW / 2f + pillarW, cy)
-        val rightPillar = RectF(cx + gateW / 2f - pillarW, cy - gateH, cx + gateW / 2f, cy)
-        canvas.drawRoundRect(leftPillar, 2f, 2f, pillarPaint)
-        canvas.drawRoundRect(rightPillar, 2f, 2f, pillarPaint)
+        // 1. Pillar Shadows on floor
+        val shadowRx = (10f * scale).coerceIn(3f, 30f)
+        val shadowRy = (shadowRx * 0.45f).coerceIn(2f, 15f)
+        ArAssets.drawGroundShadow(canvas, cx - gateW * 0.42f, proj.groundY, shadowRx, shadowRy, alpha = 130)
+        ArAssets.drawGroundShadow(canvas, cx + gateW * 0.42f, proj.groundY, shadowRx, shadowRy, alpha = 130)
 
-        // 2. Overhead Banner
-        val bannerH = 26f * scale
-        val bannerRect = RectF(cx - gateW / 2f, cy - gateH, cx + gateW / 2f, cy - gateH + bannerH)
-        val bgPaint = if (isFinishLine) finishBgPaint else bannerBgPaint
-        canvas.drawRoundRect(bannerRect, 4f, 4f, bgPaint)
-
-        borderPaint.strokeWidth = (2f * scale).coerceIn(1.5f, 5f)
-        canvas.drawRoundRect(bannerRect, 4f, 4f, borderPaint)
+        // 2. Render Gate Arch Bitmap
+        val bmp = ArAssets.gateArchBitmap
+        if (bmp != null) {
+            val dstRect = RectF(cx - gateW / 2f, cy - gateH, cx + gateW / 2f, cy)
+            val srcRect = Rect(0, 0, bmp.width, bmp.height)
+            canvas.drawBitmap(bmp, srcRect, dstRect, null)
+        }
 
         // 3. Banner Text
-        textPaint.textSize = (13f * scale).coerceIn(8f, 32f)
+        textPaint.textSize = (13f * scale).coerceIn(8f, 30f)
         val label = if (isFinishLine) "🏁 FINISH / LAP" else "🚩 GATE $gateNumber"
-        val textY = cy - gateH + (bannerH * 0.65f)
+        val textY = cy - gateH * 0.72f
         canvas.drawText(label, cx, textY, textPaint)
 
         // 4. Center Directional Guide Arrow (pointing down through gate)
-        val arrowY = cy - (gateH * 0.45f) + (sin(arrowPulse) * 4f * scale)
+        val arrowY = cy - (gateH * 0.35f) + (sin(arrowPulse) * 4f * scale)
         val arrowSize = 6f * scale
         if (arrowSize > 2f) {
             val arrowPath = android.graphics.Path().apply {

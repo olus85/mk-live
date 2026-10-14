@@ -1,5 +1,6 @@
 package com.example.mklive.ar
 
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -32,7 +33,8 @@ import kotlin.math.sin
  */
 class ArEngine(
     val soundManager: SoundManager,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    context: Context
 ) {
     val tracker = DeadReckoningTracker()
     val particleSystem = ParticleSystem()
@@ -67,6 +69,9 @@ class ArEngine(
     private var activeGateNumber = 1
 
     init {
+        // Initialize 3D bitmap assets and shadows
+        ArAssets.init(context)
+
         // Connect combat callbacks to AR engine
         combatManager.onSpawnProjectile = { isRocket, target, bumperLeft ->
             spawnProjectile(isRocket, target, bumperLeft)
@@ -88,21 +93,33 @@ class ArEngine(
     fun spawnDefaultTrackElements() {
         elements.clear()
 
-        // 1. Line of 5 golden coins directly ahead
-        elements.add(CoinElement(UUID.randomUUID().toString(), 0f, 1.2f))
-        elements.add(CoinElement(UUID.randomUUID().toString(), 0f, 2.0f))
-        elements.add(CoinElement(UUID.randomUUID().toString(), 0.25f, 2.8f))
-        elements.add(CoinElement(UUID.randomUUID().toString(), 0.35f, 3.6f))
-        elements.add(CoinElement(UUID.randomUUID().toString(), 0.15f, 4.4f))
+        // 1. Line of 5 golden coins spaced ahead along current heading
+        val coinDists = floatArrayOf(0.9f, 1.6f, 2.3f, 3.0f, 3.7f)
+        for (dist in coinDists) {
+            val (wx, wy) = tracker.toWorld(0f, dist)
+            elements.add(CoinElement(UUID.randomUUID().toString(), wx, wy))
+        }
 
-        // 2. Holographic ?-Item Box
-        elements.add(ItemBoxElement(UUID.randomUUID().toString(), 0f, 5.5f))
+        // 2. Holographic ?-Item Box at 4.6m
+        val (ibx, iby) = tracker.toWorld(0f, 4.6f)
+        elements.add(ItemBoxElement(UUID.randomUUID().toString(), ibx, iby))
 
-        // 3. Turbo Boost Dash Pad
-        elements.add(DashPadElement(UUID.randomUUID().toString(), 0f, 7.0f))
+        // 3. Turbo Boost Dash Pad at 5.8m
+        val (dpx, dpy) = tracker.toWorld(0f, 5.8f)
+        elements.add(DashPadElement(UUID.randomUUID().toString(), dpx, dpy))
 
-        // 4. Finish Gate
-        elements.add(GateElement(UUID.randomUUID().toString(), 0f, 9.0f, gateNumber = 1, isFinishLine = true))
+        // 4. Finish Gate at 7.2m
+        val (gx, gy) = tracker.toWorld(0f, 7.2f)
+        elements.add(GateElement(UUID.randomUUID().toString(), gx, gy, gateNumber = 1, isFinishLine = true))
+    }
+
+    fun resetTrack() {
+        tracker.reset(0f, 0f, 0f)
+        _coinsCollected.value = 0
+        _currentLap.value = 1
+        currentLapTimer = 0f
+        spawnDefaultTrackElements()
+        soundManager.playCountdownGo()
     }
 
     fun addVirtualGate() {
@@ -119,10 +136,9 @@ class ArEngine(
         soundManager.playCountdownGo()
 
         // Auto-spawn 3 coins leading up to next section
-        val h = tracker.headingRad
         for (i in 1..3) {
-            val dist = i * 0.8f
-            elements.add(CoinElement(UUID.randomUUID().toString(), tracker.x + sin(h) * dist, tracker.y + cos(h) * dist))
+            val (cx, cy) = tracker.toWorld(0f, i * 0.8f)
+            elements.add(CoinElement(UUID.randomUUID().toString(), cx, cy))
         }
     }
 
@@ -139,7 +155,15 @@ class ArEngine(
         if (!isArEnabled) return
 
         // 1. Update Dead Reckoning Odometry
-        tracker.update(throttle, steering, brake, yawRateDegS, headingDeg, dt)
+        tracker.update(
+            throttle = throttle,
+            steering = steering,
+            brake = brake,
+            isBoost = _isBoostActive.value,
+            gyroYawRateDegS = yawRateDegS,
+            headingDeg = headingDeg,
+            dtSec = dt
+        )
 
         // 2. Update Timers & Boost States
         currentLapTimer += dt
@@ -187,8 +211,9 @@ class ArEngine(
                 }
             }
 
-            // Check Collision with Kart (Radius overlap)
-            if (rel.distance < elem.hitRadius && !elem.isCollected) {
+            // Check Collision with Kart (Radius overlap or driving over)
+            val isColliding = (rel.distance < elem.hitRadius || (rel.yRel in -0.25f..0.48f && kotlin.math.abs(rel.xRel) < elem.hitRadius))
+            if (isColliding && !elem.isCollected) {
                 handleKartCollision(elem, rel.xRel, rel.yRel)
             }
 
@@ -209,7 +234,7 @@ class ArEngine(
                 _coinsCollected.value = minOf(10, _coinsCollected.value + 1)
                 soundManager.playCoin()
                 // Screen coordinates for particle burst
-                val proj = ArGeometry.project(xRel, yRel, elem.z, 1280f, 720f)
+                val proj = ArGeometry.project(xRel, yRel.coerceAtLeast(0.35f), elem.z, 1280f, 720f)
                 particleSystem.emitCoinStars(proj.screenX, proj.screenY)
             }
 
@@ -217,7 +242,7 @@ class ArEngine(
                 elem.isActive = false
                 elem.isCollected = true
                 soundManager.playBoxHit()
-                val proj = ArGeometry.project(xRel, yRel, elem.z, 1280f, 720f)
+                val proj = ArGeometry.project(xRel, yRel.coerceAtLeast(0.35f), elem.z, 1280f, 720f)
                 particleSystem.emitBoxShards(proj.screenX, proj.screenY)
                 combatManager.startRoulette(scope)
             }

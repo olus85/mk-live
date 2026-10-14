@@ -14,15 +14,16 @@ import kotlin.math.tan
 object ArGeometry {
 
     // Physical Camera Calibration for Mario Kart Live
-    const val CAMERA_HEIGHT_METERS = 0.045f // 4.5 cm from floor
-    const val CAMERA_TILT_DEG = 8.0f        // 8° downward tilt
-    const val FOV_HORIZONTAL_DEG = 82.0f    // 82° H-FOV
-    const val FOV_VERTICAL_DEG = 52.0f      // 52° V-FOV
-    const val IPD_METERS = 0.064f           // 64 mm Inter-pupillary distance for VR
+    const val CAMERA_HEIGHT_METERS = 0.09f // ~9 cm from floor (head/rollbar mount)
+    const val HORIZON_RATIO = 0.38f        // Horizon line at 38% height
+    const val FOV_HORIZONTAL_DEG = 82.0f   // 82° H-FOV
+    const val FOV_VERTICAL_DEG = 52.0f     // 52° V-FOV
+    const val IPD_METERS = 0.064f          // 64 mm Inter-pupillary distance for VR
 
     data class ProjectedPoint(
         val screenX: Float,
         val screenY: Float,
+        val groundY: Float,
         val scale: Float,
         val distance: Float,
         val isVisible: Boolean
@@ -30,7 +31,7 @@ object ArGeometry {
 
     /**
      * Projects a 3D point in kart-relative coordinates (X: right+, Y: forward+, Z: up+)
-     * onto 2D screen coordinates.
+     * onto 2D screen coordinates using robust ground plane homography.
      */
     fun project(
         xRel: Float,
@@ -51,37 +52,47 @@ object ArGeometry {
         val effX = xRel + eyeShift
 
         // Behind camera or too close to render
-        if (yRel <= 0.06f) {
-            return ProjectedPoint(0f, 0f, 0f, yRel, false)
+        if (yRel <= 0.12f) {
+            return ProjectedPoint(0f, 0f, 0f, 0f, yRel, false)
         }
 
+        val cx = viewWidth / 2f
         val fx = (viewWidth / 2f) / tan(Math.toRadians(FOV_HORIZONTAL_DEG / 2.0)).toFloat()
         val fy = (viewHeight / 2f) / tan(Math.toRadians(FOV_VERTICAL_DEG / 2.0)).toFloat()
 
-        // Vertical pitch angle
-        val deltaZ = CAMERA_HEIGHT_METERS - zRel
-        val effectivePitchRad = Math.toRadians((CAMERA_TILT_DEG + pitchDeg).toDouble()).toFloat()
-        val gammaV = atan2(deltaZ, yRel) - effectivePitchRad
-        val gammaH = atan2(effX, yRel)
+        // Pitch shifts horizon vertically
+        val pitchShift = fy * tan(Math.toRadians(pitchDeg.toDouble())).toFloat()
+        val vHorizon = (viewHeight * HORIZON_RATIO) + pitchShift
 
-        var u = (viewWidth / 2f) + fx * tan(gammaH)
-        var v = (viewHeight / 2f) + fy * tan(gammaV)
+        // Ground plane projection constant (K_ground = fy * H_camera)
+        val kGround = viewHeight * 0.28f
+        val groundV = vHorizon + (kGround / yRel)
 
-        // Gyro Roll Compensation
+        // Elevation offset for zRel > 0 (elevation decreases screen Y)
+        val elevationV = (fy * 0.85f * zRel) / yRel
+        var u = cx + (fx * effX) / yRel
+        var v = groundV - elevationV
+
+        // Gyro Roll Compensation: rotate (u, v) and groundV around (cx, vHorizon)
+        var finalGroundV = groundV
         if (rollDeg != 0f) {
-            val rollRad = Math.toRadians(rollDeg.toDouble()).toFloat()
+            val rollRad = Math.toRadians(-rollDeg.toDouble()).toFloat()
             val cosR = cos(rollRad)
             val sinR = sin(rollRad)
-            val cx = u - (viewWidth / 2f)
-            val cy = v - (viewHeight / 2f)
-            u = (viewWidth / 2f) + (cx * cosR - cy * sinR)
-            v = (viewHeight / 2f) + (cx * sinR + cy * cosR)
+
+            val dx = u - cx
+            val dy = v - vHorizon
+            u = cx + (dx * cosR - dy * sinR)
+            v = vHorizon + (dx * sinR + dy * cosR)
+
+            val dyG = groundV - vHorizon
+            finalGroundV = vHorizon + (dyG * cosR)
         }
 
-        val distance = kotlin.math.sqrt(effX * effX + yRel * yRel + deltaZ * deltaZ)
-        val scale = (fy * 0.15f / yRel).coerceIn(0.08f, 20f)
-        val isVisible = u in -150f..(viewWidth + 150f) && v in -150f..(viewHeight + 150f)
+        val distance = kotlin.math.sqrt(effX * effX + yRel * yRel + zRel * zRel)
+        val scale = ((1.0f / yRel) * (viewHeight / 720f)).coerceIn(0.08f, 6.0f)
+        val isVisible = yRel in 0.12f..14.0f && u in -180f..(viewWidth + 180f) && v in -180f..(viewHeight + 180f)
 
-        return ProjectedPoint(u, v, scale, distance, isVisible)
+        return ProjectedPoint(u, v, finalGroundV, scale, distance, isVisible)
     }
 }

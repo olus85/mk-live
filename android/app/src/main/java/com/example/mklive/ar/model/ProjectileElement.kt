@@ -4,7 +4,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
+import com.example.mklive.ar.ArAssets
 import com.example.mklive.ar.ArGeometry
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -101,29 +103,39 @@ class ProjectileElement(
         val scale = proj.scale
 
         if (isRocket) {
-            // Render 3D Rocket
-            val rLen = 28f * scale
-            val rW = 8f * scale
-            if (rLen < 3f) return
+            val bmp = ArAssets.rocketBitmap
+            val rSize = 28f * scale
+            if (rSize < 4f) return
 
-            // Cylindrical Body
-            val bodyRect = RectF(cx - rW / 2f, cy - rLen / 2f, cx + rW / 2f, cy + rLen / 2f)
-            canvas.drawRoundRect(bodyRect, 2f, 2f, rocketBodyPaint)
+            // Floor Shadow
+            val shadowRx = (rSize * 0.4f).coerceIn(3f, 30f)
+            val shadowRy = (shadowRx * 0.4f).coerceIn(2f, 15f)
+            ArAssets.drawGroundShadow(canvas, cx, proj.groundY, shadowRx, shadowRy, alpha = 90)
 
-            // Red Cone Warhead
-            val nosePath = Path().apply {
-                moveTo(cx - rW / 2f, cy - rLen / 2f)
-                lineTo(cx, cy - rLen * 0.9f)
-                lineTo(cx + rW / 2f, cy - rLen / 2f)
-                close()
+            if (bmp != null) {
+                val dstRect = RectF(cx - rSize / 2f, cy - rSize / 2f, cx + rSize / 2f, cy + rSize / 2f)
+                val srcRect = Rect(0, 0, bmp.width, bmp.height)
+                canvas.drawBitmap(bmp, srcRect, dstRect, null)
+            } else {
+                // Cylindrical Body
+                val rW = 8f * scale
+                val bodyRect = RectF(cx - rW / 2f, cy - rSize / 2f, cx + rW / 2f, cy + rSize / 2f)
+                canvas.drawRoundRect(bodyRect, 2f, 2f, rocketBodyPaint)
+                val nosePath = Path().apply {
+                    moveTo(cx - rW / 2f, cy - rSize / 2f)
+                    lineTo(cx, cy - rSize * 0.9f)
+                    lineTo(cx + rW / 2f, cy - rSize / 2f)
+                    close()
+                }
+                canvas.drawPath(nosePath, rocketNosePaint)
             }
-            canvas.drawPath(nosePath, rocketNosePaint)
 
             // Exhaust Thruster Flame
             val flamePath = Path().apply {
-                moveTo(cx - rW * 0.4f, cy + rLen / 2f)
-                lineTo(cx, cy + rLen * 0.9f + (Math.random().toFloat() * 4f * scale))
-                lineTo(cx + rW * 0.4f, cy + rLen / 2f)
+                val fW = 6f * scale
+                moveTo(cx - fW, cy + rSize * 0.45f)
+                lineTo(cx, cy + rSize * 0.85f + (Math.random().toFloat() * 6f * scale))
+                lineTo(cx + fW, cy + rSize * 0.45f)
                 close()
             }
             canvas.drawPath(flamePath, rocketFlamePaint)

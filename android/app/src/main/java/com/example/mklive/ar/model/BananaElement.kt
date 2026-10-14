@@ -4,6 +4,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
+import android.graphics.RectF
+import com.example.mklive.ar.ArAssets
 import com.example.mklive.ar.ArGeometry
 
 /**
@@ -14,25 +17,7 @@ class BananaElement(
     id: String,
     x: Float,
     y: Float
-) : ArElement(id, x, y, z = 0f, hitRadius = 0.16f, type = ArElementType.BANANA) {
-
-    companion object {
-        private val peelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#FFEB3B") // Bright banana yellow
-            style = Paint.Style.FILL
-        }
-
-        private val stemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#5D4037") // Brown stem
-            style = Paint.Style.FILL
-        }
-
-        private val outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#F57F17") // Deep amber outline
-            style = Paint.Style.STROKE
-            strokeWidth = 2f
-        }
-    }
+) : ArElement(id, x, y, z = 0f, hitRadius = 0.35f, type = ArElementType.BANANA) {
 
     override fun update(dt: Float) {
         // Stationary on floor
@@ -50,30 +35,21 @@ class BananaElement(
         val cx = proj.screenX
         val cy = proj.screenY
         val scale = proj.scale
-        val r = 16f * scale
+        val r = 24f * scale
 
         if (r < 3f) return
 
-        // 3-Lobed opened banana peel
-        val path = Path().apply {
-            moveTo(cx, cy - r * 0.4f)
-            // Left peel
-            quadTo(cx - r * 0.9f, cy - r * 0.2f, cx - r * 1.1f, cy + r * 0.6f)
-            quadTo(cx - r * 0.4f, cy + r * 0.3f, cx, cy)
-            // Right peel
-            quadTo(cx + r * 0.4f, cy + r * 0.3f, cx + r * 1.1f, cy + r * 0.6f)
-            quadTo(cx + r * 0.9f, cy - r * 0.2f, cx, cy - r * 0.4f)
-            // Center peel
-            quadTo(cx - r * 0.3f, cy + r * 0.8f, cx, cy + r * 1.2f)
-            quadTo(cx + r * 0.3f, cy + r * 0.8f, cx, cy - r * 0.4f)
-            close()
+        // 1. Soft Floor Shadow
+        val shadowRx = (r * 0.8f).coerceIn(4f, 50f)
+        val shadowRy = (shadowRx * 0.45f).coerceIn(2f, 25f)
+        ArAssets.drawGroundShadow(canvas, cx, proj.groundY, shadowRx, shadowRy, alpha = 130)
+
+        // 2. Render 3D Banana Bitmap
+        val bmp = ArAssets.bananaBitmap
+        if (bmp != null) {
+            val dstRect = RectF(cx - r, cy - r, cx + r, cy + r)
+            val srcRect = Rect(0, 0, bmp.width, bmp.height)
+            canvas.drawBitmap(bmp, srcRect, dstRect, null)
         }
-
-        canvas.drawPath(path, peelPaint)
-        outlinePaint.strokeWidth = (1.5f * scale).coerceIn(1f, 4f)
-        canvas.drawPath(path, outlinePaint)
-
-        // Brown top stem
-        canvas.drawCircle(cx, cy - r * 0.4f, (2.5f * scale).coerceIn(1.5f, 6f), stemPaint)
     }
 }

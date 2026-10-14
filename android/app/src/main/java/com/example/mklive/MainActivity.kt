@@ -199,8 +199,15 @@ class MainActivity : ComponentActivity() {
                     return true
                 }
 
-                // D-Pad Down / Select: Quick Toggle VR Mode (SBS / 2D)
-                KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_BUTTON_SELECT -> {
+                // D-Pad Down: Quick Re-center AR Track in front of kart
+                KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    viewModel.arEngine.resetTrack()
+                    triggerHapticFeedback(45)
+                    return true
+                }
+
+                // Select: Quick Toggle VR Mode (SBS / 2D)
+                KeyEvent.KEYCODE_BUTTON_SELECT -> {
                     viewModel.toggleVrMode()
                     triggerHapticFeedback(35)
                     return true

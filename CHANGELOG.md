@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.1] - 2026-10-15
+
+### Fixed & Improved
+* **🏎️💨 Ground Plane Homography & 3D Floor Projection:**
+  * Recalibrated camera horizon and ground plane mapping ($v = v_0 + \frac{K_{ground}}{y}$) to perfectly match the real MK Live camera viewport. Objects now reliably project onto the visible floor instead of flying off the screen edge.
+  * Added dynamic floor contact drop shadows under all 3D coins, item boxes, bananas, gates, and rockets.
+* **📍 World Anchor & Odometry Tracking:**
+  * Fixed telemetry heading jump bug that previously caused elements to instantly vanish when telemetry connected.
+  * Dynamic relative forward-vector spawning (`toWorld`): default track elements spawn directly in front of the kart's current pose.
+  * Added kinematic physical inertia and carpet-friction deadband modeling to prevent odometry jitter.
+  * Added **D-Pad DOWN** / Action menu shortcut: instant 1-button re-centering of the AR track directly in front of the kart.
+  * Enlarged collision trigger box to reliably register collections and dash pad triggers when driving over objects.
+* **🎨 High-Quality 3D Rendered Assets:**
+  * Replaced basic canvas geometric shapes with high-resolution 3D shaded assets:
+    * 3D Metallic Gold Coins (`ar_coin.png`) with spinning angle animation and sparkle flares.
+    * Glowing 3D Question Block (`ar_item_box.png`) with translucent halo and corner rivets.
+    * Cyber Neon Perspective Boost Pad (`ar_dash_pad.png`).
+    * Realistic 3D Banana Peel on carpet (`ar_banana.png`).
+    * Checkered Racing Checkpoint Archway (`ar_gate_arch.png`).
+    * 3D Red Guided Missiles (`ar_rocket.png`) and comic star burst explosions (`ar_explosion.png`).
+* **🧼 Clean, Uncluttered Cockpit HUD:**
+  * **Settings Button Pinned Top-Right:** Fixed button overflow bug where Settings was pushed off-screen. Settings is now permanently pinned at the top-right corner.
+  * **Bundled Actions Menu (`⚡ ACTIONS ▾`):** Secondary buttons (Place Gate, Re-center Track, Toggle VR Mode, Pair Kart) bundled into a sleek dropdown menu.
+  * **Classic Mario Kart Item Slot:** Interactive rounded item box at top-left displaying weapon icon and ammo count badge, with direct tap-to-use support.
+  * **Unified Status Pill:** Compact top-center badge displaying Link status, 30 FPS, and battery level.
+
+---
+
 ## [2.0.0] - 2026-10-14
 
 ### Added

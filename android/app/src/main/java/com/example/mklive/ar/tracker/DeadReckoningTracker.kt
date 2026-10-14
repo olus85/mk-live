@@ -30,22 +30,27 @@ class DeadReckoningTracker {
     var headingRad: Float = 0f
         private set
 
+    var currentSpeedMps: Float = 0f
+        private set
+
     private var lastUpdateTime = System.currentTimeMillis()
 
     fun reset(startX: Float = 0f, startY: Float = 0f, startHeadingDeg: Float = 0f) {
         x = startX
         y = startY
         headingRad = Math.toRadians(startHeadingDeg.toDouble()).toFloat()
+        currentSpeedMps = 0f
         lastUpdateTime = System.currentTimeMillis()
     }
 
     /**
-     * Updates dead reckoning pose using throttle, steering, and IMU gyro rate.
+     * Updates dead reckoning pose using throttle, steering, physical inertia, and IMU gyro rate.
      */
     fun update(
         throttle: Int,
         steering: Int,
         brake: Boolean,
+        isBoost: Boolean = false,
         gyroYawRateDegS: Float? = null,
         headingDeg: Float? = null,
         dtSec: Float? = null
@@ -54,22 +59,30 @@ class DeadReckoningTracker {
         val dt = dtSec ?: ((now - lastUpdateTime).coerceIn(1, 100) / 1000f)
         lastUpdateTime = now
 
-        // Estimate speed from throttle (approx 1.5 m/s at 100% throttle, 0 at brake)
-        val speedMps = when {
+        // Target speed based on throttle and boost
+        val maxSpeed = if (isBoost) 2.1f else 1.35f
+        val targetSpeed = when {
             brake -> 0f
-            throttle > 0 -> (throttle / 127f) * 1.5f
-            throttle < 0 -> (throttle / 128f) * 0.75f // Reverse
+            throttle > 20 -> ((throttle - 20) / 107f) * maxSpeed
+            throttle < -20 -> ((throttle + 20) / 108f) * 0.7f // Reverse
             else -> 0f
         }
 
-        // Integrate Heading/Yaw: prefer absolute IMU heading if available, else integrate yaw rate
-        if (headingDeg != null && !headingDeg.isNaN()) {
-            headingRad = Math.toRadians(headingDeg.toDouble()).toFloat()
-        } else if (gyroYawRateDegS != null && !gyroYawRateDegS.isNaN()) {
+        // Smooth physical acceleration / deceleration
+        val accelRate = if (brake) 12.0f else 6.0f
+        currentSpeedMps += (targetSpeed - currentSpeedMps) * (dt * accelRate).coerceAtMost(1.0f)
+        if (kotlin.math.abs(currentSpeedMps) < 0.01f && targetSpeed == 0f) {
+            currentSpeedMps = 0f
+        }
+
+        // Integrate Heading/Yaw:
+        // Use gyro yaw rate if available (physical sensor), else kinematic steering model
+        if (gyroYawRateDegS != null && !gyroYawRateDegS.isNaN() && kotlin.math.abs(gyroYawRateDegS) > 0.4f) {
             headingRad += Math.toRadians(gyroYawRateDegS.toDouble()).toFloat() * dt
-        } else {
-            // Fallback: estimate turning rate from steering angle
-            val steerTurnRate = (steering / 127f) * 1.8f // ~100 deg/s at full lock
+        } else if (steering != 0 && kotlin.math.abs(currentSpeedMps) > 0.05f) {
+            // Kinematic bicycle turning model: omega = (v / L) * tan(delta)
+            val steerAngle = (steering / 127f) * 0.42f // ~24 deg max steer angle
+            val steerTurnRate = (currentSpeedMps / 0.12f) * kotlin.math.sin(steerAngle)
             headingRad += steerTurnRate * dt
         }
 
@@ -77,9 +90,9 @@ class DeadReckoningTracker {
         while (headingRad < -Math.PI) headingRad += (Math.PI * 2).toFloat()
         while (headingRad > Math.PI) headingRad -= (Math.PI * 2).toFloat()
 
-        // Integrate Position
-        x += sin(headingRad) * speedMps * dt
-        y += cos(headingRad) * speedMps * dt
+        // Integrate Position in world space
+        x += sin(headingRad) * currentSpeedMps * dt
+        y += cos(headingRad) * currentSpeedMps * dt
 
         return WorldPose(x, y, headingRad)
     }
@@ -92,14 +105,25 @@ class DeadReckoningTracker {
         val dx = worldX - x
         val dy = worldY - y
 
-        // Rotate by -headingRad
-        val cosH = cos(-headingRad)
-        val sinH = sin(-headingRad)
+        // Project onto kart's Right vector (cosH, -sinH) and Forward vector (sinH, cosH)
+        val cosH = cos(headingRad)
+        val sinH = sin(headingRad)
 
         val xRel = dx * cosH - dy * sinH
         val yRel = dx * sinH + dy * cosH
         val dist = sqrt(xRel * xRel + yRel * yRel)
 
         return RelativeCoords(xRel, yRel, dist)
+    }
+
+    /**
+     * Transforms kart-relative coordinates (xRel, yRel) into world coordinates (worldX, worldY).
+     */
+    fun toWorld(xRel: Float, yRel: Float): Pair<Float, Float> {
+        val cosH = cos(headingRad)
+        val sinH = sin(headingRad)
+        val worldX = x + (xRel * cosH) + (yRel * sinH)
+        val worldY = y - (xRel * sinH) + (yRel * cosH)
+        return Pair(worldX, worldY)
     }
 }

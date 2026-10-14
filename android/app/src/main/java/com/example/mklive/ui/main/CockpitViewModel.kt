@@ -54,7 +54,7 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     val engineSynthesizer = EngineSoundSynthesizer(soundManager)
 
     // 🌟 Augmented Reality & Combat Engine
-    val arEngine = ArEngine(soundManager, viewModelScope)
+    val arEngine = ArEngine(soundManager, viewModelScope, application)
 
     // Host IP: default to PC Base Station (192.168.0.105)
     private val _hostIp = MutableStateFlow(prefs.getString("base_station_ip", "192.168.0.105") ?: "192.168.0.105")

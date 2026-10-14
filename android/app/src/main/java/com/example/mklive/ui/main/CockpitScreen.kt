@@ -160,6 +160,7 @@ fun CockpitScreen(
                 onFireWeapon = { viewModel.useActiveItem() },
                 onCycleWeapon = { viewModel.cycleWeapon() },
                 onDropGate = { viewModel.addVirtualGate() },
+                onResetTrack = { viewModel.arEngine.resetTrack() },
                 onRecordToggle = { viewModel.toggleRecording(context) },
                 onPairClicked = { viewModel.openPairing() },
                 onSettingsClicked = { viewModel.openSettings() },

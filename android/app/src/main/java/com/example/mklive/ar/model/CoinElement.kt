@@ -4,7 +4,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
+import com.example.mklive.ar.ArAssets
 import com.example.mklive.ar.ArGeometry
 import kotlin.math.PI
 import kotlin.math.abs
@@ -14,51 +16,41 @@ import kotlin.math.sin
 /**
  * Interactive 3D Gold Coin.
  * Hovers ~5 cm above the ground, rotates continuously in 3D space,
- * bobs rhythmically, and glitters.
+ * casts a realistic floor shadow, bobs rhythmically, and glitters.
  */
 class CoinElement(
     id: String,
     x: Float,
     y: Float
-) : ArElement(id, x, y, z = 0.05f, hitRadius = 0.18f, type = ArElementType.COIN) {
+) : ArElement(id, x, y, z = 0.05f, hitRadius = 0.32f, type = ArElementType.COIN) {
 
     private var rotationAngle = (Math.random() * 360).toFloat()
     private var bobPhase = (Math.random() * PI * 2).toFloat()
 
     companion object {
         private val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#FF8F00") // Deep gold edge
+            color = Color.parseColor("#FF8F00")
             style = Paint.Style.STROKE
             strokeWidth = 3f
         }
 
         private val goldFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#FFD54F") // Bright gold face
-            style = Paint.Style.FILL
-        }
-
-        private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#FFF59D") // Shiny center
-            style = Paint.Style.FILL
-        }
-
-        private val innerBarPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#FF8F00")
+            color = Color.parseColor("#FFD54F")
             style = Paint.Style.FILL
         }
 
         private val sparklePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.FILL
-            setShadowLayer(6f, 0f, 0f, Color.YELLOW)
+            setShadowLayer(8f, 0f, 0f, Color.YELLOW)
         }
     }
 
     override fun update(dt: Float) {
         rotationAngle = (rotationAngle + 180f * dt) % 360f
         bobPhase = (bobPhase + 3.0f * dt) % (PI * 2).toFloat()
-        // Bob up and down ~1.5 cm
-        z = 0.05f + (sin(bobPhase) * 0.015f)
+        // Bob up and down ~2 cm
+        z = 0.05f + (sin(bobPhase) * 0.02f)
     }
 
     override fun render(
@@ -72,43 +64,41 @@ class CoinElement(
 
         val cx = proj.screenX
         val cy = proj.screenY
-        val baseR = 18f * proj.scale
+        val baseR = 26f * proj.scale
 
-        if (baseR < 3f) return
+        if (baseR < 4f) return
 
-        // 3D rotation aspect factor: cos(angle) creates the illusion of 3D rotation
+        // 1. Draw floor contact shadow directly beneath the coin
+        val shadowRx = (baseR * 0.75f).coerceIn(4f, 70f)
+        val shadowRy = (shadowRx * 0.45f).coerceIn(2f, 35f)
+        ArAssets.drawGroundShadow(canvas, cx, proj.groundY, shadowRx, shadowRy, alpha = 130)
+
+        // 2. 3D rotation aspect factor: cos(angle) creates the illusion of 3D rotation
         val rotRad = Math.toRadians(rotationAngle.toDouble())
-        val widthFactor = abs(cos(rotRad)).toFloat().coerceAtLeast(0.08f)
+        val widthFactor = abs(cos(rotRad)).toFloat().coerceAtLeast(0.12f)
         val rx = baseR * widthFactor
         val ry = baseR
 
-        // 1. Draw outer gold coin disc
-        val ovalRect = RectF(cx - rx, cy - ry, cx + rx, cy + ry)
-        canvas.drawOval(ovalRect, goldFillPaint)
+        val dstRect = RectF(cx - rx, cy - ry, cx + rx, cy + ry)
+        val bmp = ArAssets.coinBitmap
 
-        // 2. Draw rim
-        rimPaint.strokeWidth = (2f * proj.scale).coerceIn(1.5f, 6f)
-        canvas.drawOval(ovalRect, rimPaint)
-
-        // 3. Draw inner shiny ring if coin is wide enough
-        if (widthFactor > 0.35f) {
-            val innerRect = RectF(cx - rx * 0.7f, cy - ry * 0.7f, cx + rx * 0.7f, cy + ry * 0.7f)
-            canvas.drawOval(innerRect, highlightPaint)
-
-            // Central coin slot / bar
-            val barW = rx * 0.25f
-            val barH = ry * 0.45f
-            val barRect = RectF(cx - barW, cy - barH, cx + barW, cy + barH)
-            canvas.drawRoundRect(barRect, 2f, 2f, innerBarPaint)
+        if (bmp != null) {
+            val srcRect = Rect(0, 0, bmp.width, bmp.height)
+            canvas.drawBitmap(bmp, srcRect, dstRect, null)
+        } else {
+            // Fallback: procedural shiny oval
+            canvas.drawOval(dstRect, goldFillPaint)
+            rimPaint.strokeWidth = (2.5f * proj.scale).coerceIn(1.5f, 6f)
+            canvas.drawOval(dstRect, rimPaint)
         }
 
-        // 4. Glint Sparkle when facing viewer
+        // 3. Glint Sparkle when facing viewer
         val glintPhase = abs(cos(rotRad))
         if (glintPhase > 0.85f) {
-            val sparkSize = (4f * proj.scale).coerceIn(2f, 10f)
-            val sx = cx + rx * 0.5f
-            val sy = cy - ry * 0.5f
-            canvas.drawCircle(sx, sy, sparkSize * 0.6f, sparklePaint)
+            val sparkSize = (6f * proj.scale).coerceIn(3f, 16f)
+            val sx = cx + rx * 0.4f
+            val sy = cy - ry * 0.4f
+            canvas.drawCircle(sx, sy, sparkSize * 0.5f, sparklePaint)
             canvas.drawLine(sx - sparkSize, sy, sx + sparkSize, sy, sparklePaint)
             canvas.drawLine(sx, sy - sparkSize, sx, sy + sparkSize, sparklePaint)
         }
