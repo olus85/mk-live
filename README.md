@@ -1,6 +1,6 @@
 # MK Live Cockpit & Base Station
 
-Drive and record **Mario Kart Live: Home Circuit** without a Nintendo Switch — now with **Meta Quest 3 VR Mode** & **AAA Arcade UI**! 🏎️🥽💨
+Drive and record **Mario Kart Live: Home Circuit** — now with **Meta Quest 3 VR Mode** & **AAA Arcade UI**! 🏎️🥽💨
 
 <p align="center">
   <img src="docs/screenshots/01_start_screen.png" alt="Mario Kart Live Home Circuit Start Screen" width="100%">
@@ -56,7 +56,7 @@ Bereit zum Ausdrucken für deine Wohnung:
     * **[R1 / RB]:** Weapon Select / Horn.
 * **🔊 Low-Latency SoundPool SFX & Dynamic Engine RPM Synthesizer:**
   * Procedurally synthesized 16-bit PCM 44.1 kHz arcade audio engine (zero external dependencies).
-  * Pitch-modulated kart engine sound scaling in real time with live throttle telemetry ($0.8\text{x} \dots 2.2\text{x}$).
+  * Pitch-modulated kart engine sound scaling in real time with live throttle telemetry.
 * **🥽 Meta Quest 3 & VR Headset Stereoscopic 3D AR:**
   * Dual-viewport Side-by-Side (SBS) rendering with inter-pupillary distance (IPD) parallax: AR coins, gates, and boxes appear with tangible 3D depth directly in your room.
 * **🛠️ Video Recorder Color Channel Inversion Bugfix:**
