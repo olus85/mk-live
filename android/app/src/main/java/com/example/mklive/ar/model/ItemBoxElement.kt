@@ -21,7 +21,7 @@ class ItemBoxElement(
     id: String,
     x: Float,
     y: Float
-) : ArElement(id, x, y, z = 0.08f, hitRadius = 0.35f, type = ArElementType.ITEM_BOX) {
+) : ArElement(id, x, y, z = 0.08f, hitRadius = 0.52f, type = ArElementType.ITEM_BOX) {
 
     private var rotationAngle = (Math.random() * 360).toFloat()
     private var pulsePhase = (Math.random() * PI * 2).toFloat()
@@ -61,7 +61,7 @@ class ItemBoxElement(
 
         val cx = proj.screenX
         val cy = proj.screenY
-        val size = 36f * proj.scale
+        val size = 64f * proj.scale
 
         if (size < 4f) return
 

@@ -22,7 +22,7 @@ class GateElement(
     y: Float,
     val gateNumber: Int, // 1, 2, 3, 4
     val isFinishLine: Boolean = false
-) : ArElement(id, x, y, z = 0f, hitRadius = 0.60f, type = ArElementType.GATE) {
+) : ArElement(id, x, y, z = 0f, hitRadius = 0.85f, type = ArElementType.GATE) {
 
     var isPassedThisLap = false
     private var arrowPulse = 0f
@@ -58,8 +58,8 @@ class GateElement(
         val cy = proj.screenY
         val scale = proj.scale
 
-        val gateW = 100f * scale
-        val gateH = 80f * scale
+        val gateW = 240f * scale
+        val gateH = 190f * scale
 
         if (gateW < 10f) return
 

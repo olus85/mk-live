@@ -18,7 +18,7 @@ class DashPadElement(
     id: String,
     x: Float,
     y: Float
-) : ArElement(id, x, y, z = 0.0f, hitRadius = 0.42f, type = ArElementType.DASH_PAD) {
+) : ArElement(id, x, y, z = 0.0f, hitRadius = 0.55f, type = ArElementType.DASH_PAD) {
 
     private var animPhase = 0f
 
@@ -44,8 +44,8 @@ class DashPadElement(
 
         val cx = proj.screenX
         val cy = proj.screenY
-        val w = 64f * proj.scale
-        val h = 42f * proj.scale
+        val w = 130f * proj.scale
+        val h = 85f * proj.scale
 
         if (w < 8f) return
 

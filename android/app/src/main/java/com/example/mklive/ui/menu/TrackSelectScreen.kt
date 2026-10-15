@@ -144,7 +144,7 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                     Surface(
                         onClick = { viewModel.selectTrack(track) },
                         modifier = Modifier
-                            .width(260.dp)
+                            .width(275.dp)
                             .fillMaxHeight(),
                         color = cardBg,
                         shape = RoundedCornerShape(22.dp),
@@ -210,9 +210,10 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                                 Text(
                                     text = "🚩 $gates Tore • 🪙 $coins Münzen • ⚡ $pads Turbo",
                                     color = Color(0xBBFFFFFF),
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = FontFamily.Monospace,
+                                    maxLines = 1
                                 )
                             }
                         }

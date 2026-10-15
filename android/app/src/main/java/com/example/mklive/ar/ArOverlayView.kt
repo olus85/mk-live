@@ -94,8 +94,7 @@ fun ArOverlayView(
             }
 
             else -> {
-                // Subtle central targeting pip
-                drawCircle(color = Color(0x6600E5FF), radius = 3f, center = Offset(cx, cy))
+                // Clean cockpit: no crosshair or reticle when unarmed
             }
         }
     }

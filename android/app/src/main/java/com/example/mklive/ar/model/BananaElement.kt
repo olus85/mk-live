@@ -17,7 +17,7 @@ class BananaElement(
     id: String,
     x: Float,
     y: Float
-) : ArElement(id, x, y, z = 0f, hitRadius = 0.35f, type = ArElementType.BANANA) {
+) : ArElement(id, x, y, z = 0f, hitRadius = 0.45f, type = ArElementType.BANANA) {
 
     override fun update(dt: Float) {
         // Stationary on floor
@@ -35,7 +35,7 @@ class BananaElement(
         val cx = proj.screenX
         val cy = proj.screenY
         val scale = proj.scale
-        val r = 24f * scale
+        val r = 44f * scale
 
         if (r < 3f) return
 

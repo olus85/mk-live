@@ -27,7 +27,7 @@ object TrackManager {
 
     fun getBuiltinPresets(): List<TrackPreset> {
         return listOf(
-            // 1. Wohnzimmer Grand Prix (Technical S-Curve)
+            // 1. Wohnzimmer Grand Prix (Closed Loop Circuit)
             TrackPreset(
                 id = "cup_mushroom_1",
                 name = "Mushroom Cup: Living Room GP",
@@ -35,31 +35,27 @@ object TrackManager {
                 difficulty = "★☆☆",
                 drawableResName = "art_cup_mushroom",
                 elements = listOf(
-                    // Straightaway 1: Coins
+                    // North Straight
                     TrackElementData("COIN", 0.0f, 0.9f),
-                    TrackElementData("COIN", 0.0f, 1.6f),
-                    TrackElementData("COIN", 0.0f, 2.3f),
-                    // Gate 1: First Corner
+                    TrackElementData("DASH_PAD", 0.0f, 1.7f),
+                    TrackElementData("COIN", 0.0f, 2.5f),
                     TrackElementData("GATE", 0.0f, 3.2f, gateNumber = 1),
-                    // S-Curve: Item Box
-                    TrackElementData("ITEM_BOX", 0.35f, 4.4f),
-                    TrackElementData("COIN", 0.5f, 5.2f),
-                    TrackElementData("COIN", 0.3f, 6.0f),
-                    // Gate 2: Hairpin Turn
-                    TrackElementData("GATE", 0.0f, 7.0f, gateNumber = 2),
-                    // Turbo Straight
-                    TrackElementData("DASH_PAD", -0.2f, 8.2f),
-                    TrackElementData("COIN", -0.2f, 9.2f),
-                    TrackElementData("COIN", -0.2f, 10.0f),
-                    // Gate 3: Chicane
-                    TrackElementData("GATE", 0.0f, 11.2f, gateNumber = 3),
-                    TrackElementData("ITEM_BOX", 0.0f, 12.4f),
-                    // Finish Gate / Lap Arch
-                    TrackElementData("GATE", 0.0f, 13.8f, gateNumber = 4, isFinishLine = true)
+                    // East Turn
+                    TrackElementData("COIN", 0.7f, 3.2f),
+                    TrackElementData("ITEM_BOX", 1.5f, 3.2f),
+                    TrackElementData("GATE", 2.2f, 3.2f, gateNumber = 2),
+                    // South Straight (Returning)
+                    TrackElementData("COIN", 2.2f, 2.3f),
+                    TrackElementData("DASH_PAD", 2.2f, 1.5f),
+                    TrackElementData("GATE", 2.2f, 0.6f, gateNumber = 3),
+                    // West Turn (Into Finish Line)
+                    TrackElementData("COIN", 1.5f, 0.6f),
+                    TrackElementData("COIN", 0.7f, 0.6f),
+                    TrackElementData("GATE", 0.0f, 0.6f, gateNumber = 4, isFinishLine = true)
                 )
             ),
 
-            // 2. Turbo Speed Oval
+            // 2. Turbo Speed Oval (Fast 3-Gate Loop)
             TrackPreset(
                 id = "cup_flower_1",
                 name = "Flower Cup: Nitro Oval",
@@ -67,16 +63,19 @@ object TrackManager {
                 difficulty = "★★☆",
                 drawableResName = "art_cup_flower",
                 elements = listOf(
+                    // Straight 1
                     TrackElementData("DASH_PAD", 0.0f, 1.2f),
                     TrackElementData("COIN", 0.0f, 2.2f),
-                    TrackElementData("COIN", 0.0f, 3.2f),
-                    TrackElementData("GATE", 0.0f, 4.5f, gateNumber = 1),
-                    TrackElementData("ITEM_BOX", 0.2f, 6.0f),
-                    TrackElementData("DASH_PAD", 0.2f, 7.5f),
-                    TrackElementData("GATE", 0.0f, 9.0f, gateNumber = 2),
-                    TrackElementData("COIN", -0.2f, 10.5f),
-                    TrackElementData("COIN", -0.2f, 11.5f),
-                    TrackElementData("GATE", 0.0f, 13.0f, gateNumber = 3, isFinishLine = true)
+                    TrackElementData("GATE", 0.0f, 3.4f, gateNumber = 1),
+                    // Curve 1
+                    TrackElementData("ITEM_BOX", 1.2f, 3.4f),
+                    TrackElementData("GATE", 2.4f, 3.4f, gateNumber = 2),
+                    // Back Straight
+                    TrackElementData("DASH_PAD", 2.4f, 2.0f),
+                    TrackElementData("COIN", 2.4f, 1.0f),
+                    TrackElementData("GATE", 2.4f, 0.2f, gateNumber = 3, isFinishLine = true),
+                    // Curve 2
+                    TrackElementData("DASH_PAD", 1.2f, 0.2f)
                 )
             ),
 
@@ -88,15 +87,15 @@ object TrackManager {
                 difficulty = "★★★",
                 drawableResName = "art_cup_star",
                 elements = listOf(
-                    TrackElementData("ITEM_BOX", -0.6f, 2.0f),
-                    TrackElementData("ITEM_BOX", 0.6f, 2.0f),
-                    TrackElementData("DASH_PAD", 0.0f, 3.2f),
-                    TrackElementData("ITEM_BOX", 0.0f, 4.5f),
-                    TrackElementData("COIN", -0.8f, 3.5f),
-                    TrackElementData("COIN", 0.8f, 3.5f),
-                    TrackElementData("BANANA", -0.3f, 5.2f),
-                    TrackElementData("BANANA", 0.3f, 5.2f),
-                    TrackElementData("GATE", 0.0f, 6.5f, gateNumber = 1, isFinishLine = true)
+                    TrackElementData("ITEM_BOX", -1.0f, 2.0f),
+                    TrackElementData("ITEM_BOX", 1.0f, 2.0f),
+                    TrackElementData("DASH_PAD", 0.0f, 2.8f),
+                    TrackElementData("ITEM_BOX", 0.0f, 3.8f),
+                    TrackElementData("COIN", -1.2f, 3.0f),
+                    TrackElementData("COIN", 1.2f, 3.0f),
+                    TrackElementData("BANANA", -0.4f, 2.0f),
+                    TrackElementData("BANANA", 0.4f, 2.0f),
+                    TrackElementData("GATE", 0.0f, 4.8f, gateNumber = 1, isFinishLine = true)
                 )
             )
         )

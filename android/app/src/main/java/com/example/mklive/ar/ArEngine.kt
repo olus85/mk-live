@@ -18,6 +18,7 @@ import com.example.mklive.combat.CombatManager
 import com.example.mklive.combat.ParticleSystem
 import com.example.mklive.combat.WeaponType
 import com.example.mklive.game.TrackElementData
+import com.example.mklive.game.TrackManager
 import com.example.mklive.game.TrackPreset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -131,37 +132,13 @@ class ArEngine(
     }
 
     fun spawnDefaultTrackElements() {
-        elements.clear()
-
-        // 1. Line of 5 golden coins spaced ahead along current heading
-        val coinDists = floatArrayOf(0.9f, 1.6f, 2.3f, 3.0f, 3.7f)
-        for (dist in coinDists) {
-            val (wx, wy) = tracker.toWorld(0f, dist)
-            elements.add(CoinElement(UUID.randomUUID().toString(), wx, wy))
-        }
-
-        // 2. Holographic ?-Item Box at 4.6m
-        val (ibx, iby) = tracker.toWorld(0f, 4.6f)
-        elements.add(ItemBoxElement(UUID.randomUUID().toString(), ibx, iby))
-
-        // 3. Turbo Boost Dash Pad at 5.8m
-        val (dpx, dpy) = tracker.toWorld(0f, 5.8f)
-        elements.add(DashPadElement(UUID.randomUUID().toString(), dpx, dpy))
-
-        // 4. Finish Gate at 7.2m
-        val (gx, gy) = tracker.toWorld(0f, 7.2f)
-        elements.add(GateElement(UUID.randomUUID().toString(), gx, gy, gateNumber = 1, isFinishLine = true))
+        val preset = TrackManager.getBuiltinPresets().first()
+        loadTrack(preset)
     }
 
     fun resetTrack() {
-        tracker.reset(0f, 0f, 0f)
-        _coinsCollected.value = 0
-        _currentLap.value = 1
-        currentLapTimer = 0f
-        totalRaceTimer = 0f
-        completedLapTimes.clear()
-        activeGateNumber = 1
-        spawnDefaultTrackElements()
+        val preset = TrackManager.getBuiltinPresets().first()
+        loadTrack(preset)
         soundManager.playCountdownGo()
     }
 
@@ -296,7 +273,7 @@ class ArEngine(
             }
 
             // Check Collision with Kart (Radius overlap or driving over)
-            val isColliding = (rel.distance < elem.hitRadius || (rel.yRel in -0.25f..0.48f && kotlin.math.abs(rel.xRel) < elem.hitRadius))
+            val isColliding = (rel.distance < elem.hitRadius || (rel.yRel in -0.35f..0.60f && kotlin.math.abs(rel.xRel) < elem.hitRadius))
             if (isColliding && !elem.isCollected) {
                 handleKartCollision(elem, rel.xRel, rel.yRel)
             }

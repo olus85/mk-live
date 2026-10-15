@@ -23,10 +23,10 @@ class CombatManager(
     val particleSystem: ParticleSystem
 ) {
 
-    private val _activeWeapon = MutableStateFlow(WeaponType.MINIGUN)
+    private val _activeWeapon = MutableStateFlow(WeaponType.NONE)
     val activeWeapon: StateFlow<WeaponType> = _activeWeapon.asStateFlow()
 
-    private val _ammo = MutableStateFlow(99)
+    private val _ammo = MutableStateFlow(0)
     val ammo: StateFlow<Int> = _ammo.asStateFlow()
 
     private val _isRouletteActive = MutableStateFlow(false)

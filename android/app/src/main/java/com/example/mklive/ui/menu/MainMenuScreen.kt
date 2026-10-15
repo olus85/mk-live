@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mklive.R
@@ -203,51 +204,11 @@ fun MainMenuScreen(viewModel: CockpitViewModel) {
                 }
             }
 
-            // BOTTOM CLUSTER: Subtle Active Setup Pill + 3 Big Buttons
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Subtle Active Setup Pill (Tucked neatly above buttons, leaving center art 100% free!)
-                Surface(
-                    onClick = { viewModel.navigateTo(GameState.GARAGE) },
-                    color = Color(0xB3080E1A),
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, Color(0x5500E5FF))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(id = GameAssetHelper.getDrawableResId(selectedCharacter.drawableResName)),
-                            contentDescription = selectedCharacter.characterName,
-                            modifier = Modifier
-                                .size(22.dp)
-                                .clip(CircleShape)
-                        )
-                        Text(
-                            text = "${selectedCharacter.characterName}  •  ${selectedTrack.name}",
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "ÄNDERN ▾",
-                            color = Color(0xFF00E5FF),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
-                }
-
-                // The 3 Big Primary Nintendo Action Buttons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(92.dp),
+            // BOTTOM: The 3 Big Primary Nintendo Action Buttons (Clean & Uncluttered)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(94.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -281,10 +242,12 @@ fun MainMenuScreen(viewModel: CockpitViewModel) {
                                 letterSpacing = 2.sp
                             )
                             Text(
-                                text = "Fahrer & Strecke wählen",
+                                text = "🏎️ ${selectedCharacter.characterName}  •  ${selectedTrack.name}",
                                 color = Color(0xFFFFD54F),
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -367,7 +330,6 @@ fun MainMenuScreen(viewModel: CockpitViewModel) {
             }
         }
     }
-}
 
     // Modal Dialogs
     if (isSettingsOpen) {

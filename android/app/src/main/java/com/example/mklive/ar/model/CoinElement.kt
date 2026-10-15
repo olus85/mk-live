@@ -22,7 +22,7 @@ class CoinElement(
     id: String,
     x: Float,
     y: Float
-) : ArElement(id, x, y, z = 0.05f, hitRadius = 0.32f, type = ArElementType.COIN) {
+) : ArElement(id, x, y, z = 0.05f, hitRadius = 0.48f, type = ArElementType.COIN) {
 
     private var rotationAngle = (Math.random() * 360).toFloat()
     private var bobPhase = (Math.random() * PI * 2).toFloat()
@@ -64,7 +64,7 @@ class CoinElement(
 
         val cx = proj.screenX
         val cy = proj.screenY
-        val baseR = 26f * proj.scale
+        val baseR = 46f * proj.scale
 
         if (baseR < 4f) return
 

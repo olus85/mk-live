@@ -391,7 +391,7 @@ fun CockpitOverlay(
 }
 
 /**
- * Vibrant, modern Nintendo Arcade Speedometer with dynamic glowing arc and boost styling.
+ * Vibrant, arcade Nintendo Speedometer with dial tick marks, dynamic speed glow, and boost styling.
  */
 @Composable
 fun ArcadeSpeedometerView(
@@ -401,39 +401,68 @@ fun ArcadeSpeedometerView(
 ) {
     Box(
         modifier = modifier
-            .size(110.dp)
-            .background(Color(0xD9080E1A), CircleShape)
-            .border(2.5.dp, if (isBoosting) Color(0xFFFFD54F) else Color(0x6600E5FF), CircleShape),
+            .size(120.dp)
+            .background(Color(0xE6080E1C), CircleShape)
+            .border(
+                width = if (isBoosting) 3.5.dp else 2.5.dp,
+                color = if (isBoosting) Color(0xFFFFD54F) else Color(0x9900E5FF),
+                shape = CircleShape
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.fillMaxSize().padding(10.dp)) {
-            val strokeW = 9.dp.toPx()
-            // Background arc (240 degrees from 150 deg to 390 deg)
+        Canvas(modifier = Modifier.fillMaxSize().padding(11.dp)) {
+            val strokeW = 10.dp.toPx()
+            val centerPt = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
+            val radius = (size.width - strokeW) / 2f
+
+            // 1. Dial Tick Marks (9 notches from 150° to 390°)
+            for (i in 0..8) {
+                val tickAngleDeg = 150f + i * (240f / 8f)
+                val tickRad = Math.toRadians(tickAngleDeg.toDouble())
+                val cosT = kotlin.math.cos(tickRad).toFloat()
+                val sinT = kotlin.math.sin(tickRad).toFloat()
+
+                val innerR = radius - 8.dp.toPx()
+                val outerR = radius - 2.dp.toPx()
+
+                val p1 = androidx.compose.ui.geometry.Offset(centerPt.x + innerR * cosT, centerPt.y + innerR * sinT)
+                val p2 = androidx.compose.ui.geometry.Offset(centerPt.x + outerR * cosT, centerPt.y + outerR * sinT)
+
+                val tickCol = when {
+                    i >= 6 -> Color(0xFFFF5252)
+                    i >= 3 -> Color(0xFFFFD600)
+                    else -> Color(0x8800E5FF)
+                }
+                drawLine(tickCol, p1, p2, strokeWidth = if (i % 2 == 0) 2.5f else 1.5f)
+            }
+
+            // 2. Background Track Arc
             drawArc(
-                color = Color(0x33FFFFFF),
+                color = Color(0x3300E5FF),
                 startAngle = 150f,
                 sweepAngle = 240f,
                 useCenter = false,
                 style = Stroke(width = strokeW, cap = StrokeCap.Round)
             )
 
-            // Dynamic colorful speed arc
+            // 3. Dynamic Colorful Speed Arc
             val sweep = (speedPercent.coerceIn(0, 100) / 100f) * 240f
             val arcColor = when {
-                isBoosting -> Color(0xFFFF2A4D)
-                speedPercent > 75 -> Color(0xFFFF9100)
+                isBoosting -> Color(0xFFFF1744)
+                speedPercent > 70 -> Color(0xFFFF5252)
                 speedPercent > 40 -> Color(0xFFFFD600)
-                else -> Color(0xFF00E676)
+                speedPercent > 10 -> Color(0xFF00E676)
+                else -> Color(0xFF00E5FF)
             }
-            if (sweep > 0) {
-                drawArc(
-                    color = arcColor,
-                    startAngle = 150f,
-                    sweepAngle = sweep,
-                    useCenter = false,
-                    style = Stroke(width = strokeW, cap = StrokeCap.Round)
-                )
-            }
+
+            // Zero pip
+            drawArc(
+                color = if (speedPercent > 0) arcColor else Color(0x6600E5FF),
+                startAngle = 150f,
+                sweepAngle = sweep.coerceAtLeast(4f),
+                useCenter = false,
+                style = Stroke(width = strokeW, cap = StrokeCap.Round)
+            )
         }
 
         // Speed Number & KM/H in center
@@ -444,15 +473,15 @@ fun ArcadeSpeedometerView(
             val displaySpeed = if (isBoosting) (speedPercent * 1.5).toInt() else speedPercent
             Text(
                 text = "$displaySpeed",
-                color = Color.White,
-                fontSize = 28.sp,
+                color = if (isBoosting) Color(0xFFFFD54F) else Color.White,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Black,
                 fontFamily = FontFamily.SansSerif
             )
             Text(
-                text = if (isBoosting) "⚡ BOOST" else "KM/H",
+                text = if (isBoosting) "⚡ TURBO" else "KM/H",
                 color = if (isBoosting) Color(0xFFFFD54F) else Color(0xFF00E5FF),
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Black,
                 fontFamily = FontFamily.Monospace,
                 letterSpacing = 1.sp
