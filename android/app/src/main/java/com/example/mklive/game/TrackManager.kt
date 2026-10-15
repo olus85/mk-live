@@ -20,7 +20,8 @@ data class TrackPreset(
     val cup: String,
     val difficulty: String,
     val drawableResName: String,
-    val elements: List<TrackElementData>
+    val elements: List<TrackElementData>,
+    val breadcrumbs: List<Pair<Float, Float>> = emptyList()
 )
 
 object TrackManager {
@@ -54,7 +55,12 @@ object TrackManager {
         )
     }
 
-    fun saveCustomTrack(context: Context, trackName: String, elements: List<TrackElementData>): Boolean {
+    fun saveCustomTrack(
+        context: Context,
+        trackName: String,
+        elements: List<TrackElementData>,
+        breadcrumbs: List<Pair<Float, Float>> = emptyList()
+    ): Boolean {
         return try {
             val dir = File(context.filesDir, "custom_tracks").apply { if (!exists()) mkdirs() }
             val cleanName = trackName.trim().replace(Regex("[^a-zA-Z0-9_-]"), "_")
@@ -79,6 +85,16 @@ object TrackManager {
                     arr.put(obj)
                 }
                 put("elements", arr)
+
+                val bcArr = JSONArray()
+                breadcrumbs.forEach { pt ->
+                    val ptObj = JSONObject().apply {
+                        put("x", pt.first.toDouble())
+                        put("y", pt.second.toDouble())
+                    }
+                    bcArr.put(ptObj)
+                }
+                put("breadcrumbs", bcArr)
             }
 
             file.writeText(root.toString(2))
@@ -118,7 +134,17 @@ object TrackManager {
                         )
                     }
                 }
-                list.add(TrackPreset(id, name, cup, difficulty, "art_mode_track_builder", elemList))
+
+                val bcList = mutableListOf<Pair<Float, Float>>()
+                val bcArr = root.optJSONArray("breadcrumbs")
+                if (bcArr != null) {
+                    for (i in 0 until bcArr.length()) {
+                        val ptObj = bcArr.getJSONObject(i)
+                        bcList.add(Pair(ptObj.getDouble("x").toFloat(), ptObj.getDouble("y").toFloat()))
+                    }
+                }
+
+                list.add(TrackPreset(id, name, cup, difficulty, "art_mode_track_builder", elemList, bcList))
             } catch (_: Exception) {}
         }
         return list

@@ -79,6 +79,31 @@ class ArEngine(
     var totalRaceTimer = 0f
     val targetLaps = 3
 
+    var isDynamicRoomArcade: Boolean = true
+    var isDriveAndPaintMode: Boolean = false
+    val trackBreadcrumbs = CopyOnWriteArrayList<Pair<Float, Float>>()
+    private var lastRecordedPoint: Pair<Float, Float>? = null
+    private var totalDrivenDist: Float = 0f
+    private var autoPlacedGateCount: Int = 1
+
+    private val trackRibbonBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#00E5FF")
+        style = Paint.Style.STROKE
+        strokeWidth = 3.5f
+        setShadowLayer(10f, 0f, 0f, Color.parseColor("#00B0FF"))
+    }
+
+    private val trackRibbonCenterPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#80D8FF")
+        style = Paint.Style.STROKE
+        strokeWidth = 2.0f
+    }
+
+    private val trackRibbonFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(45, 0, 229, 255)
+        style = Paint.Style.FILL
+    }
+
     init {
         // Initialize 3D bitmap assets and shadows
         ArAssets.init(context)
@@ -101,7 +126,12 @@ class ArEngine(
         spawnDefaultTrackElements()
     }
 
-    var isDynamicRoomArcade: Boolean = true
+    fun getTrackBreadcrumbsRelative(): List<Pair<Float, Float>> {
+        return trackBreadcrumbs.map { pt ->
+            val rel = tracker.toRelative(pt.first, pt.second)
+            Pair(rel.xRel, rel.yRel)
+        }
+    }
 
     fun loadTrack(preset: TrackPreset) {
         elements.clear()
@@ -113,6 +143,33 @@ class ArEngine(
         completedLapTimes.clear()
         activeGateNumber = 1
         isDynamicRoomArcade = (preset.id == "room_dynamic_arcade")
+        isDriveAndPaintMode = (preset.id == "track_builder_circuit" || preset.id.startsWith("custom_"))
+        trackBreadcrumbs.clear()
+        lastRecordedPoint = null
+        totalDrivenDist = 0f
+        autoPlacedGateCount = 1
+
+        if (preset.id == "track_builder_circuit") {
+            // Place start/finish gate 1.2m ahead of kart so player drives through it!
+            val (g1x, g1y) = tracker.toWorld(0.0f, 1.2f)
+            elements.add(GateElement(UUID.randomUUID().toString(), g1x, g1y, gateNumber = 1, isFinishLine = true))
+            trackBreadcrumbs.add(Pair(tracker.x, tracker.y))
+            trackBreadcrumbs.add(Pair(g1x, g1y))
+            lastRecordedPoint = Pair(g1x, g1y)
+        } else if (preset.breadcrumbs.isNotEmpty()) {
+            // Restore saved custom track ribbon
+            preset.breadcrumbs.forEach { (bx, by) ->
+                val (wx, wy) = tracker.toWorld(bx, by)
+                trackBreadcrumbs.add(Pair(wx, wy))
+            }
+        } else if (isDynamicRoomArcade) {
+            // Procedural glowing cyber corridor leading through Gate 1
+            for (step in 0..15) {
+                val yAhead = step * 0.35f
+                val (wx, wy) = tracker.toWorld(0f, yAhead)
+                trackBreadcrumbs.add(Pair(wx, wy))
+            }
+        }
 
         preset.elements.forEach { elemData ->
             val (wx, wy) = tracker.toWorld(elemData.x, elemData.y)
@@ -146,6 +203,12 @@ class ArEngine(
             isFinishLine = isFinish
         )
         elements.add(gate)
+
+        // Extend cyber ribbon forward to the gate
+        for (step in 1..8) {
+            val (wx, wy) = tracker.toWorld(0.0f, step * 0.40f)
+            trackBreadcrumbs.add(Pair(wx, wy))
+        }
 
         // Spawn interactive arcade item / coin cluster along the corridor
         val rand = kotlin.random.Random.nextInt(3)
@@ -255,7 +318,58 @@ class ArEngine(
             dtSec = dt
         )
 
-        // 2. Update Timers & Boost States
+        // 2. Drive & Paint: Record live floor trail (Spur)
+        if (isDriveAndPaintMode && kotlin.math.abs(tracker.currentSpeedMps) > 0.05f) {
+            val cur = Pair(tracker.x, tracker.y)
+            val last = lastRecordedPoint
+            val d = if (last != null) {
+                val dx = cur.first - last.first
+                val dy = cur.second - last.second
+                kotlin.math.sqrt(dx * dx + dy * dy)
+            } else 1.0f
+
+            if (d >= 0.18f) {
+                trackBreadcrumbs.add(cur)
+                lastRecordedPoint = cur
+                totalDrivenDist += d
+
+                // Auto-place checkpoints as the user drives their circuit
+                if (autoPlacedGateCount == 1 && totalDrivenDist >= 3.0f) {
+                    autoPlacedGateCount = 2
+                    elements.add(GateElement(UUID.randomUUID().toString(), cur.first, cur.second, gateNumber = 2, isFinishLine = false))
+                    soundManager.playCountdownGo()
+                } else if (autoPlacedGateCount == 2 && totalDrivenDist >= 6.0f) {
+                    autoPlacedGateCount = 3
+                    elements.add(GateElement(UUID.randomUUID().toString(), cur.first, cur.second, gateNumber = 3, isFinishLine = false))
+                    soundManager.playCountdownGo()
+                } else if (autoPlacedGateCount == 3 && totalDrivenDist >= 9.0f) {
+                    autoPlacedGateCount = 4
+                    elements.add(GateElement(UUID.randomUUID().toString(), cur.first, cur.second, gateNumber = 4, isFinishLine = false))
+                    soundManager.playCountdownGo()
+                } else if (autoPlacedGateCount >= 4 && totalDrivenDist >= 11.0f) {
+                    // Check if returning close to Gate 1 (start gate)
+                    val gate1 = elements.find { it is GateElement && it.gateNumber == 1 }
+                    if (gate1 != null) {
+                        val dx = cur.first - gate1.x
+                        val dy = cur.second - gate1.y
+                        val distToStart = kotlin.math.sqrt(dx * dx + dy * dy)
+                        if (distToStart < 1.4f) {
+                            // Close the track loop!
+                            trackBreadcrumbs.add(Pair(gate1.x, gate1.y))
+                            isDriveAndPaintMode = false
+                            soundManager.playFinalLapFanfare()
+                            // Reset gates for racing!
+                            elements.filterIsInstance<GateElement>().forEach { it.isPassedThisLap = false }
+                            activeGateNumber = 1
+                            currentLapTimer = 0f
+                            _currentLap.value = 1
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Update Timers & Boost States
         currentLapTimer += dt
         totalRaceTimer += dt
         if (boostTimer > 0f) {
@@ -272,10 +386,10 @@ class ArEngine(
             _isSpinningOut.value = false
         }
 
-        // 3. Update Combat & Particle System
+        // 4. Update Combat & Particle System
         particleSystem.update(dt)
 
-        // 4. Update all elements and handle collisions
+        // 5. Update all elements and handle collisions
         val iterator = elements.iterator()
         var nearestLockTarget: ArElement? = null
         var minTargetDist = 5.0f
@@ -292,9 +406,9 @@ class ArEngine(
             // Relative position to kart
             val rel = tracker.toRelative(elem.x, elem.y)
 
-            // Scan for Rocket Lock-On Target (Items, obstacles, gates in front cone)
-            if (elem.type == ArElementType.ITEM_BOX || elem.type == ArElementType.BANANA || elem.type == ArElementType.GATE) {
-                if (rel.yRel in 0.5f..4.5f && Math.abs(rel.xRel) < 0.65f) {
+            // Scan for Rocket Lock-On Target (Items & obstacles ONLY - never lock onto gates!)
+            if (elem.type == ArElementType.ITEM_BOX || elem.type == ArElementType.BANANA) {
+                if (rel.yRel in 0.8f..4.0f && kotlin.math.abs(rel.xRel) < 0.35f) {
                     if (rel.distance < minTargetDist) {
                         minTargetDist = rel.distance
                         nearestLockTarget = elem
@@ -353,10 +467,24 @@ class ArEngine(
             }
 
             is GateElement -> {
+                if (isDriveAndPaintMode) {
+                    // In Drive & Paint mode, gates are waypoints being established
+                    if (!elem.isPassedThisLap) {
+                        elem.isPassedThisLap = true
+                        soundManager.playCountdownGo()
+                    }
+                    return
+                }
+
                 if (!elem.isPassedThisLap && elem.gateNumber == activeGateNumber) {
-                    elem.isPassedThisLap = true
-                    soundManager.playCountdownGo()
                     if (elem.isFinishLine) {
+                        // Prevent instant re-trigger if kart is lingering inside gate
+                        if (currentLapTimer < 3.5f && _currentLap.value > 1) {
+                            return
+                        }
+
+                        elem.isPassedThisLap = true
+                        soundManager.playCountdownGo()
                         // Completed lap!
                         val lapTime = currentLapTimer
                         completedLapTimes.add(lapTime)
@@ -375,18 +503,30 @@ class ArEngine(
                                 soundManager.playFinalLapFanfare()
                             }
                             _currentLap.value++
-                            activeGateNumber = 1
+                            activeGateNumber = if (isDynamicRoomArcade) 1 else 2
                             if (isDynamicRoomArcade) {
                                 spawnNextDynamicGate(1)
                             } else {
-                                // Reset all static gates for next lap
-                                elements.filterIsInstance<GateElement>().forEach { it.isPassedThisLap = false }
+                                // Reset all other gates for next lap
+                                elements.filterIsInstance<GateElement>().forEach {
+                                    if (!it.isFinishLine) it.isPassedThisLap = false
+                                }
                             }
                         }
                     } else {
-                        activeGateNumber++
-                        if (isDynamicRoomArcade) {
-                            spawnNextDynamicGate(activeGateNumber)
+                        elem.isPassedThisLap = true
+                        soundManager.playCountdownGo()
+                        val allGates = elements.filterIsInstance<GateElement>()
+                        val maxGate = allGates.maxOfOrNull { it.gateNumber } ?: 1
+                        if (activeGateNumber < maxGate) {
+                            activeGateNumber++
+                            if (isDynamicRoomArcade) {
+                                spawnNextDynamicGate(activeGateNumber)
+                            }
+                        } else {
+                            // All checkpoints passed! Now ready for finish line!
+                            activeGateNumber = 1
+                            allGates.find { it.isFinishLine }?.isPassedThisLap = false
                         }
                     }
                 }
@@ -429,14 +569,15 @@ class ArEngine(
 
     private fun spawnProjectile(isRocket: Boolean, target: ArElement?, bumperLeft: Boolean) {
         val h = tracker.headingRad
-        val lateralOffset = if (bumperLeft) -0.12f else 0.12f
-        val spawnX = tracker.x + (cos(h) * lateralOffset) + (sin(h) * 0.25f)
-        val spawnY = tracker.y - (sin(h) * lateralOffset) + (cos(h) * 0.25f)
+        // Rockets fire dead-center straight ahead; miniguns alternate left/right bumpers
+        val lateralOffset = if (isRocket) 0.0f else (if (bumperLeft) -0.14f else 0.14f)
+        val spawnX = tracker.x + (cos(h) * lateralOffset) + (sin(h) * 0.35f)
+        val spawnY = tracker.y - (sin(h) * lateralOffset) + (cos(h) * 0.35f)
 
         if (!isRocket) {
             // Muzzle flash at bumper
             val bumperRelX = lateralOffset
-            val bumperRelY = 0.25f
+            val bumperRelY = 0.28f
             val projScreen = ArGeometry.project(bumperRelX, bumperRelY, 0.04f, 1280f, 720f)
             particleSystem.emitMuzzleFlash(projScreen.screenX, projScreen.screenY)
         }
@@ -490,6 +631,58 @@ class ArEngine(
         }
     }
 
+    private fun renderTrackRibbon(
+        canvas: Canvas,
+        viewWidth: Float,
+        viewHeight: Float,
+        pitchDeg: Float,
+        rollDeg: Float,
+        isLeftEye: Boolean?
+    ) {
+        val pts = trackBreadcrumbs
+        if (pts.size < 2) return
+
+        val halfW = 0.32f // ~64cm total track width
+
+        for (i in 0 until pts.size - 1) {
+            val pA = pts[i]
+            val pB = pts[i + 1]
+
+            val relA = tracker.toRelative(pA.first, pA.second)
+            val relB = tracker.toRelative(pB.first, pB.second)
+
+            // Skip if both points are behind the camera or too far away
+            if (relA.yRel < 0.10f && relB.yRel < 0.10f) continue
+            if (relA.distance > 9.0f && relB.distance > 9.0f) continue
+
+            val yA = relA.yRel.coerceAtLeast(0.14f)
+            val yB = relB.yRel.coerceAtLeast(0.14f)
+
+            val projAL = ArGeometry.project(relA.xRel - halfW, yA, 0f, viewWidth, viewHeight, pitchDeg, rollDeg, isLeftEye)
+            val projAR = ArGeometry.project(relA.xRel + halfW, yA, 0f, viewWidth, viewHeight, pitchDeg, rollDeg, isLeftEye)
+            val projBL = ArGeometry.project(relB.xRel - halfW, yB, 0f, viewWidth, viewHeight, pitchDeg, rollDeg, isLeftEye)
+            val projBR = ArGeometry.project(relB.xRel + halfW, yB, 0f, viewWidth, viewHeight, pitchDeg, rollDeg, isLeftEye)
+
+            val quad = android.graphics.Path().apply {
+                moveTo(projAL.screenX, projAL.screenY)
+                lineTo(projAR.screenX, projAR.screenY)
+                lineTo(projBR.screenX, projBR.screenY)
+                lineTo(projBL.screenX, projBL.screenY)
+                close()
+            }
+            canvas.drawPath(quad, trackRibbonFillPaint)
+            canvas.drawLine(projAL.screenX, projAL.screenY, projBL.screenX, projBL.screenY, trackRibbonBorderPaint)
+            canvas.drawLine(projAR.screenX, projAR.screenY, projBR.screenX, projBR.screenY, trackRibbonBorderPaint)
+
+            // Dashed neon centerline
+            if (i % 2 == 0) {
+                val projAC = ArGeometry.project(relA.xRel, yA, 0f, viewWidth, viewHeight, pitchDeg, rollDeg, isLeftEye)
+                val projBC = ArGeometry.project(relB.xRel, yB, 0f, viewWidth, viewHeight, pitchDeg, rollDeg, isLeftEye)
+                canvas.drawLine(projAC.screenX, projAC.screenY, projBC.screenX, projBC.screenY, trackRibbonCenterPaint)
+            }
+        }
+    }
+
     /**
      * Renders all 3D AR elements, projectiles, and particle effects.
      */
@@ -510,6 +703,11 @@ class ArEngine(
             canvas.translate(particleSystem.screenShakeOffsetX, particleSystem.screenShakeOffsetY)
         }
 
+        // Render Drive & Paint track ribbon FIRST (on the floor plane underneath objects)
+        if (trackBreadcrumbs.size >= 2) {
+            renderTrackRibbon(canvas, viewWidth, viewHeight, pitchDeg, rollDeg, isLeftEye)
+        }
+
         // Sort elements by distance: render furthest objects first (Painter's Algorithm)
         val sortedList = elements.map { elem ->
             val rel = tracker.toRelative(elem.x, elem.y)
@@ -523,6 +721,24 @@ class ArEngine(
                 rollDeg = rollDeg,
                 isLeftEye = isLeftEye
             )
+
+            // Calculate perspective 3D tail position for minigun tracers
+            if (elem is ProjectileElement && !elem.isRocket) {
+                val tailRel = tracker.toRelative(elem.tailX, elem.tailY)
+                val tailProj = ArGeometry.project(
+                    xRel = tailRel.xRel,
+                    yRel = tailRel.yRel.coerceAtLeast(0.12f),
+                    zRel = elem.z,
+                    viewWidth = viewWidth,
+                    viewHeight = viewHeight,
+                    pitchDeg = pitchDeg,
+                    rollDeg = rollDeg,
+                    isLeftEye = isLeftEye
+                )
+                elem.tailScreenX = tailProj.screenX
+                elem.tailScreenY = tailProj.screenY
+            }
+
             Pair(elem, proj)
         }.filter { it.second.isVisible }.sortedByDescending { it.second.distance }
 

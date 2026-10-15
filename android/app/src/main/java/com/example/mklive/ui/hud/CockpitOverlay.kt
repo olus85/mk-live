@@ -339,8 +339,12 @@ fun CockpitOverlay(
         }
 
         // 4. ARCADE SPEEDOMETER (Bottom-Right Corner)
-        val throttlePct = (driveCommand.throttle / 127f * 100).toInt().coerceAtLeast(0)
         val isBoosting = driveCommand.throttle >= 120
+        val throttlePct = when {
+            isBoosting -> 100
+            driveCommand.throttle > 0 -> ((driveCommand.throttle / 90f) * 70f).toInt().coerceIn(0, 70)
+            else -> 0
+        }
         ArcadeSpeedometerView(
             speedPercent = throttlePct,
             isBoosting = isBoosting,
@@ -348,45 +352,6 @@ fun CockpitOverlay(
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 16.dp)
         )
-
-        // 5. TRACK BUILDER FLOATING TOOLBAR (Only shown in Track Builder Mode)
-        if (gameMode == GameMode.TRACK_BUILDER) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 14.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xF0101722),
-                border = BorderStroke(1.5.dp, Color(0xFFFFD54F)),
-                shadowElevation = 10.dp
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("🛠️ EDITOR:", color = Color(0xFFFFD54F), fontSize = 11.sp, fontWeight = FontWeight.Black)
-                    Surface(onClick = { onAddBuilderElement("GATE") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
-                        Text("🚩 +TOR", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
-                    }
-                    Surface(onClick = { onAddBuilderElement("COIN") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
-                        Text("🪙 +MÜNZE", color = Color(0xFFFFD54F), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
-                    }
-                    Surface(onClick = { onAddBuilderElement("ITEM_BOX") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
-                        Text("📦 +BOX", color = Color(0xFF00E5FF), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
-                    }
-                    Surface(onClick = { onAddBuilderElement("DASH_PAD") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
-                        Text("⚡ +TURBO", color = Color(0xFFFF9100), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
-                    }
-                    Surface(onClick = { onAddBuilderElement("BANANA") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
-                        Text("🍌 +BANANE", color = Color(0xFFFFEB3B), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
-                    }
-                    Surface(onClick = onSaveTrackClicked, color = Color(0xFF00E676), shape = RoundedCornerShape(6.dp)) {
-                        Text("💾 FERTIG", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -470,7 +435,7 @@ fun ArcadeSpeedometerView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            val displaySpeed = if (isBoosting) (speedPercent * 1.5).toInt() else speedPercent
+            val displaySpeed = speedPercent
             Text(
                 text = "$displaySpeed",
                 color = if (isBoosting) Color(0xFFFFD54F) else Color.White,

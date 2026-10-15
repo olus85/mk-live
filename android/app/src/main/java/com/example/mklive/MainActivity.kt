@@ -248,12 +248,12 @@ class MainActivity : ComponentActivity() {
                             return true
                         }
 
-                        // A Button: Mushroom Boost (100%) & Use Active Item
+                        // A Button: Nitro Boost (100% Top Speed Burst) - Pure Boost, no double weapon firing!
                         KeyEvent.KEYCODE_BUTTON_A -> {
                             if (!padBoost) {
                                 padBoost = true
-                                triggerHapticFeedback(45)
-                                viewModel.useActiveItem()
+                                triggerHapticFeedback(50)
+                                viewModel.useBoost()
                                 dispatchGamepadInput()
                             }
                             return true

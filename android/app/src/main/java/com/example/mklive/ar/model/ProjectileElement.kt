@@ -40,6 +40,11 @@ class ProjectileElement(
     var isDetonated = false
     var onEmitTrail: ((screenX: Float, screenY: Float) -> Unit)? = null
 
+    val tailX: Float get() = x - sin(headingRad) * 0.45f
+    val tailY: Float get() = y - cos(headingRad) * 0.45f
+    var tailScreenX: Float = 0f
+    var tailScreenY: Float = 0f
+
     companion object {
         private val rocketBodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.parseColor("#E0E0E0")
@@ -57,11 +62,22 @@ class ProjectileElement(
             setShadowLayer(14f, 0f, 0f, Color.RED)
         }
 
-        private val tracerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#FFEA00")
+        private val tracerGlowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#FFD600")
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
-            setShadowLayer(12f, 0f, 0f, Color.parseColor("#FF6D00"))
+            setShadowLayer(14f, 0f, 0f, Color.parseColor("#FF6D00"))
+        }
+
+        private val tracerCorePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            style = Paint.Style.STROKE
+            strokeCap = Paint.Cap.ROUND
+        }
+
+        private val tracerTipPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            style = Paint.Style.FILL
         }
     }
 
@@ -72,7 +88,7 @@ class ProjectileElement(
             return
         }
 
-        // Homing Missile Guidance: Adjust heading towards target if locked
+        // Homing Missile Guidance: Adjust heading towards target ONLY if locked in front
         val tx = targetX
         val ty = targetY
         if (isRocket && tx != null && ty != null) {
@@ -82,10 +98,13 @@ class ProjectileElement(
             var diff = targetAngle - headingRad
             while (diff < -Math.PI) diff += (Math.PI * 2).toFloat()
             while (diff > Math.PI) diff -= (Math.PI * 2).toFloat()
-            headingRad += (diff * 4.5f * dt).coerceIn(-2.0f * dt, 2.0f * dt)
+            // Only home in if target is within a tight 25° front cone
+            if (kotlin.math.abs(diff) < 0.45f) {
+                headingRad += (diff * 3.5f * dt).coerceIn(-1.8f * dt, 1.8f * dt)
+            }
         }
 
-        // Move forward
+        // Move forward straight along heading
         x += sin(headingRad) * speed * dt
         y += cos(headingRad) * speed * dt
     }
@@ -144,10 +163,22 @@ class ProjectileElement(
             }
             canvas.drawPath(flamePath, rocketFlamePaint)
         } else {
-            // Render High-speed Minigun Tracer Line (Thick, glowing beam)
-            val tracerLen = (36f * scale).coerceIn(14f, 80f)
-            tracerPaint.strokeWidth = (6.0f * scale).coerceIn(3.0f, 14f)
-            canvas.drawLine(cx, cy + tracerLen, cx, cy - tracerLen, tracerPaint)
+            // Render High-speed Minigun Tracer Line (Perspective 3D Laser Beam streaking forward!)
+            val startX = if (tailScreenX != 0f) tailScreenX else cx
+            val startY = if (tailScreenY != 0f) tailScreenY else (cy + 25f * scale)
+            val endX = cx
+            val endY = cy
+
+            // Outer glowing neon beam
+            tracerGlowPaint.strokeWidth = (9.0f * scale).coerceIn(4.0f, 22f)
+            canvas.drawLine(startX, startY, endX, endY, tracerGlowPaint)
+
+            // Inner bright white laser core
+            tracerCorePaint.strokeWidth = (3.5f * scale).coerceIn(1.8f, 9f)
+            canvas.drawLine(startX, startY, endX, endY, tracerCorePaint)
+
+            // Glowing tip spark
+            canvas.drawCircle(endX, endY, (3.0f * scale).coerceIn(2f, 7f), tracerTipPaint)
         }
     }
 }

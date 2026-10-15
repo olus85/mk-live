@@ -227,31 +227,6 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                     }
                 }
             }
-
-            // 4. BOTTOM BAR: Secondary Track Builder Action
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Surface(
-                    onClick = {
-                        viewModel.selectMode(com.example.mklive.game.GameMode.TRACK_BUILDER)
-                        viewModel.startRace()
-                    },
-                    color = Color(0xFF131C28),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, Color(0x6600E5FF))
-                ) {
-                    Text(
-                        text = "🛠️ EIGENE STRECKE IM AR-EDITOR BAUEN",
-                        color = Color(0xFF80D8FF),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp,
-                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 7.dp)
-                    )
-                }
-            }
         }
     }
 }

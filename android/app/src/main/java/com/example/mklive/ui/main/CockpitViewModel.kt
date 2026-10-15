@@ -439,14 +439,13 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
 
         // In countdown, allow checking throttle for rocket start, but don't drive kart yet
         val isLocked = _raceState.value == RaceState.COUNTDOWN
-        val speedFactor = _selectedSpeedClass.value.maxSpeedMps / SpeedClass.CC_100.maxSpeedMps
+        var effThrottle = throttle.coerceIn(-127, 127)
 
-        var effThrottle = (throttle * speedFactor).toInt().coerceIn(-127, 127)
         if (isLocked) {
             effThrottle = 0
         } else if (_rocketStartStall.value || arEngine.isSpinningOut.value) {
             effThrottle = 0 // Spin-out or stall cut
-        } else if (arEngine.isBoostActive.value) {
+        } else if (arEngine.isBoostActive.value || throttle >= 120) {
             effThrottle = 127 // 100% Nitro Boost
         } else if (effThrottle > 0 && arEngine.coinsCollected.value > 0) {
             val buff = 1.0f + (arEngine.coinsCollected.value * 0.015f)
@@ -455,21 +454,20 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
 
         _currentCommand.value = DriveCommand(if (isLocked) throttle else effThrottle, steering, brake, padName)
         teleoperation.submitCommand(effThrottle, steering, brake, padName)
-        engineSynthesizer.updateTelemetry(effThrottle, brake, arEngine.isBoostActive.value)
+        engineSynthesizer.updateTelemetry(effThrottle, brake, arEngine.isBoostActive.value || effThrottle >= 120)
     }
 
     fun handleTouchInput(throttle: Int, steering: Int, brake: Boolean) {
         if (!_isGamepadActive.value) {
             _inputSource.value = "Touch"
             val isLocked = _raceState.value == RaceState.COUNTDOWN
-            val speedFactor = _selectedSpeedClass.value.maxSpeedMps / SpeedClass.CC_100.maxSpeedMps
+            var effThrottle = throttle.coerceIn(-127, 127)
 
-            var effThrottle = (throttle * speedFactor).toInt().coerceIn(-127, 127)
             if (isLocked) {
                 effThrottle = 0
             } else if (_rocketStartStall.value || arEngine.isSpinningOut.value) {
                 effThrottle = 0
-            } else if (arEngine.isBoostActive.value) {
+            } else if (arEngine.isBoostActive.value || throttle >= 120) {
                 effThrottle = 127
             } else if (effThrottle > 0 && arEngine.coinsCollected.value > 0) {
                 val buff = 1.0f + (arEngine.coinsCollected.value * 0.015f)
@@ -478,7 +476,7 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
 
             _currentCommand.value = DriveCommand(if (isLocked) throttle else effThrottle, steering, brake, "touch")
             teleoperation.submitCommand(effThrottle, steering, brake, "touch")
-            engineSynthesizer.updateTelemetry(effThrottle, brake, arEngine.isBoostActive.value)
+            engineSynthesizer.updateTelemetry(effThrottle, brake, arEngine.isBoostActive.value || effThrottle >= 120)
         }
     }
 
@@ -491,6 +489,12 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     fun selectMode(mode: GameMode) {
         soundManager.playMenuSelect()
         _selectedMode.value = mode
+        if (mode == GameMode.TRACK_BUILDER) {
+            val builderPreset = TrackManager.getBuiltinPresets().find { it.id == "track_builder_circuit" }
+            if (builderPreset != null) {
+                _selectedTrack.value = builderPreset
+            }
+        }
     }
 
     fun selectCharacter(char: CharacterProfile) {
@@ -522,7 +526,8 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
 
     fun saveCurrentTrack(name: String): Boolean {
         val elements = arEngine.getPlacedElements()
-        val ok = TrackManager.saveCustomTrack(getApplication(), name, elements)
+        val breadcrumbs = arEngine.getTrackBreadcrumbsRelative()
+        val ok = TrackManager.saveCustomTrack(getApplication(), name, elements, breadcrumbs)
         if (ok) {
             reloadCustomTracks()
             soundManager.playMenuConfirm()
@@ -590,7 +595,10 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     fun fireRocket() = arEngine.combatManager.fireRocket()
     fun dropBanana() = arEngine.combatManager.dropBanana()
     fun throwBobomb() = arEngine.combatManager.throwBobomb()
-    fun useBoost() = arEngine.combatManager.useBoost()
+    fun useBoost() {
+        soundManager.playBoostTurbo()
+        arEngine.triggerBoost(2.0f)
+    }
     fun cycleWeapon() = arEngine.combatManager.cycleWeapon()
     fun addVirtualGate() = arEngine.addVirtualGate()
 
