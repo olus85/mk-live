@@ -99,6 +99,7 @@ enum class CharacterProfile(
     val accelRating: Int,     // 1..5
     val handlingRating: Int   // 1..5
 ) {
+    TAHA("Taha", "🚙", "#FF6D00", "Monster Truck", "art_char_taha", 5, 5, 4),
     MARIO("Mario", "🏎️", "#E52521", "Allrounder", "art_char_mario", 4, 4, 4),
     LUIGI("Luigi", "🏎️", "#00A82D", "Agil & Wendig", "art_char_luigi", 3, 5, 4),
     PEACH("Peach", "👑", "#FF69B4", "Top Kurvenlage", "art_char_peach", 3, 4, 5),

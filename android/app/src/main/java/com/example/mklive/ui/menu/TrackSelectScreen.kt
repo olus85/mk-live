@@ -85,17 +85,17 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                 // Title
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "CUP &",
+                        text = "CUP",
                         color = Color.White,
-                        fontSize = 22.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "GESCHWINDIGKEIT",
+                        text = "WÄHLEN",
                         color = Color(0xFF00E5FF),
-                        fontSize = 22.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
                     )
@@ -127,62 +127,13 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                 }
             }
 
-            // 2. SPEED CLASS SELECTOR (4 Big tactile buttons)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                SpeedClass.values().forEach { sc ->
-                    val isSelected = selectedSpeedClass == sc
-                    val scColor = when (sc) {
-                        SpeedClass.CC_50 -> Color(0xFF00E676)
-                        SpeedClass.CC_100 -> Color(0xFFFFD600)
-                        SpeedClass.CC_150 -> Color(0xFFFF3D00)
-                        SpeedClass.CC_200 -> Color(0xFFD500F9)
-                    }
-
-                    Surface(
-                        onClick = { viewModel.selectSpeedClass(sc) },
-                        modifier = Modifier.weight(1f),
-                        color = if (isSelected) Color(0xFF142033) else Color(0xFF0D1420),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(if (isSelected) 2.5.dp else 1.dp, if (isSelected) scColor else Color(0x33FFFFFF))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(CircleShape)
-                                    .background(scColor)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = sc.label,
-                                color = if (isSelected) scColor else Color.White,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Black,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 3. CENTER: Horizontal Row of Huge Cup Cards
+            // 2. CENTER: Horizontal Row of Huge Cup Cards (Full Height, Uncropped Trophies!)
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 items(allTracks) { track ->
@@ -193,7 +144,7 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                     Surface(
                         onClick = { viewModel.selectTrack(track) },
                         modifier = Modifier
-                            .width(240.dp)
+                            .width(260.dp)
                             .fillMaxHeight(),
                         color = cardBg,
                         shape = RoundedCornerShape(22.dp),
@@ -207,7 +158,7 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                             verticalArrangement = Arrangement.SpaceBetween,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // 3D Cup Trophy Image
+                            // 3D Cup Trophy Image (Fit mode, fully visible mushroom and flower!)
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -219,8 +170,10 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                                 Image(
                                     painter = painterResource(id = GameAssetHelper.getDrawableResId(track.drawableResName)),
                                     contentDescription = track.name,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp)
                                 )
 
                                 if (isSelected) {

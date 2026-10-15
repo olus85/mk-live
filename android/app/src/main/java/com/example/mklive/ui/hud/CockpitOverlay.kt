@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,20 +15,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -38,12 +32,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mklive.R
 import com.example.mklive.combat.WeaponType
+import com.example.mklive.game.GameMode
 import com.example.mklive.model.DriveCommand
 import com.example.mklive.model.ImuSnapshot
 import com.example.mklive.model.KartDeviceInfo
 import com.example.mklive.model.OpenKartStateResponse
-import com.example.mklive.game.GameMode
-import kotlin.math.min
 
 @Composable
 fun CockpitOverlay(
@@ -78,433 +71,318 @@ fun CockpitOverlay(
     onResetHeading: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showQuickMenu by remember { mutableStateOf(false) }
-
     Box(modifier = modifier.fillMaxSize()) {
-        // TOP BAR ROW (Pinned components: Stats on Left, Status in Center, Controls on Right)
+        // 1. TOP BAR ROW (Stats on Left, Simple Turn Hint in Center, System & Controls on Right)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            // 1. TOP-LEFT: Brand & Race Stats (Coins & Lap / Balloons)
+            // TOP-LEFT: Brand & Race Stats (Coins & Lap / Balloons)
             Row(
                 modifier = Modifier.align(Alignment.TopStart),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.hud_brand),
-                    color = Color(0xFF00E5FF),
-                    fontWeight = FontWeight.Black,
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Coins Pill
+                // Coins Pill (Large, glowing gold)
                 Surface(
-                    color = Color(0xDD111111),
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, Color(0xFFFFD54F))
+                    color = Color(0xDD0D131F),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.5.dp, Color(0xFFFFD54F)),
+                    shadowElevation = 6.dp
                 ) {
-                    Text(
-                        text = "🪙 x${"%02d".format(coins)}",
-                        color = Color(0xFFFFD54F),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("🪙", fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "%02d".format(coins),
+                            color = Color(0xFFFFD54F),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Black,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.width(5.dp))
 
                 if (gameMode == GameMode.BALLOON_BATTLE) {
                     // Balloon Pill
                     Surface(
-                        color = Color(0xDD111111),
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(1.dp, Color(0xFFFF1744))
+                        color = Color(0xDD0D131F),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.5.dp, Color(0xFFFF1744)),
+                        shadowElevation = 6.dp
                     ) {
-                        Text(
-                            text = "🎈 x$balloonsRemaining",
-                            color = Color(0xFFFF1744),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("🎈", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "x$balloonsRemaining",
+                                color = Color(0xFFFF1744),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
                     }
                 } else {
                     // Lap Pill
                     Surface(
-                        color = Color(0xDD111111),
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(1.dp, Color(0xFF00E5FF))
+                        color = Color(0xDD0D131F),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.5.dp, Color(0xFF00E5FF)),
+                        shadowElevation = 6.dp
                     ) {
-                        Text(
-                            text = "🏁 LAP $currentLap/3",
-                            color = Color(0xFF00E5FF),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("🏁", fontSize = 15.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "RUNDE $currentLap/3",
+                                color = Color(0xFF00E5FF),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
                     }
                 }
             }
 
-            // 2. TOP-CENTER: Compact Telemetry Status Pill & Gate Indicator
-            Column(
-                modifier = Modifier.align(Alignment.TopCenter),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            // TOP-CENTER: Friendly Directional Gate Arrow (Child-friendly navigation without technical numbers)
+            if (nextGateAngleDeg != null) {
+                val deg = nextGateAngleDeg.toInt()
+                val arrow = when {
+                    deg in -20..20 -> "▲ NÄCHSTES TOR"
+                    deg in 21..70 -> "TOR RECHTS ▶"
+                    deg > 70 -> "SCHARF RECHTS ▶▶"
+                    deg in -70..-21 -> "◀ TOR LINKS"
+                    else -> "◀◀ SCHARF LINKS"
+                }
                 Surface(
-                    color = Color(0xCC0A0E14),
+                    color = Color(0xEE0B1424),
                     shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, Color(0x4400E5FF))
+                    border = BorderStroke(1.5.dp, Color(0xFF00E5FF)),
+                    modifier = Modifier.align(Alignment.TopCenter)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(7.dp)
-                    ) {
-                        Text(
-                            text = (kartInfo.character ?: "KART").uppercase(),
-                            color = if (kartInfo.character != null) Color(0xFF00E676) else Color(0x99FFFFFF),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        )
-                        Text("•", color = Color(0x44FFFFFF), fontSize = 9.sp)
-                        Text(
-                            text = "$videoFps FPS",
-                            color = if (videoFps >= 20) Color.White else Color(0xFFFF9100),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        )
-                        Text("•", color = Color(0x44FFFFFF), fontSize = 9.sp)
-                        BatteryChip(
-                            batteryLevel = kartInfo.battery ?: 0,
-                            isCableConnected = kartInfo.cable == true
-                        )
-                    }
-                }
-
-                if (nextGateAngleDeg != null) {
-                    val deg = nextGateAngleDeg.toInt()
-                    val arrow = when {
-                        deg in -15..15 -> "▲ TOR GERADEAUS"
-                        deg in 16..60 -> "TOR RECHTS ▶"
-                        deg > 60 -> "SCHARF RECHTS ▶▶"
-                        deg in -60..-16 -> "◀ TOR LINKS"
-                        else -> "◀◀ SCHARF LINKS"
-                    }
-                    val heading = ((imuSnapshot.headingDeg % 360 + 360) % 360).toInt()
-                    val cardinal = when (heading) {
-                        in 338..360, in 0..22 -> "N"
-                        in 23..67 -> "NE"
-                        in 68..112 -> "E"
-                        in 113..157 -> "SE"
-                        in 158..202 -> "S"
-                        in 203..247 -> "SW"
-                        in 248..292 -> "W"
-                        in 293..337 -> "NW"
-                        else -> "N"
-                    }
-                    Surface(
-                        color = Color(0xEE0B121C),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0xFF00E5FF)),
-                        modifier = Modifier.padding(top = 4.dp)
-                    ) {
-                        Text(
-                            text = "$arrow (${deg}°) • %03d° %s".format(heading, cardinal),
-                            color = Color(0xFF00E5FF),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
+                    Text(
+                        text = arrow,
+                        color = Color(0xFF00E5FF),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.SansSerif,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                    )
                 }
             }
 
-            // 3. TOP-RIGHT: Controls Cluster (REC • Quick Actions • Settings ⚙️ • Menu ⏸️)
+            // TOP-RIGHT: Controls Cluster (REC • Battery • Settings ⚙️ • Menu ⏸️)
             Row(
                 modifier = Modifier.align(Alignment.TopEnd),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Record Button
-                Surface(
-                    onClick = onRecordToggle,
-                    color = if (isRecording) Color(0xFFD50000) else Color(0xCC1E272C),
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, if (isRecording) Color(0xFFFF5252) else Color(0x66FF1744)),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 9.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val mins = recordingDurationSec / 60
-                        val secs = recordingDurationSec % 60
-                        val timeStr = String.format(java.util.Locale.US, "%02d:%02d", mins, secs)
-                        if (isRecording) {
-                            Text("⏹ $timeStr", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        } else {
-                            Text("⏺ REC", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                        }
-                    }
-                }
-
-                // Quick Actions Dropdown Menu Button
-                Box {
+                // Record Indicator / Button
+                if (isRecording) {
                     Surface(
-                        onClick = { showQuickMenu = !showQuickMenu },
-                        color = Color(0xCC1E272C),
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(1.dp, Color(0x6600E5FF)),
-                        modifier = Modifier.height(32.dp)
+                        onClick = onRecordToggle,
+                        color = Color(0xDDE52521),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color.White),
+                        modifier = Modifier.height(36.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 9.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("🏎️ ACTIONS ▾", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
+                            Text("● REC", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Black)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "%02d:%02d".format(recordingDurationSec / 60, recordingDurationSec % 60),
+                                color = Color.White,
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
                         }
                     }
-
-                    DropdownMenu(
-                        expanded = showQuickMenu,
-                        onDismissRequest = { showQuickMenu = false },
-                        modifier = Modifier.background(Color(0xF510161C))
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("🚩 Checkpoint-Tor platzieren", color = Color.White, fontSize = 12.sp) },
-                            onClick = {
-                                showQuickMenu = false
-                                onDropGate()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("🔄 AR-Strecke vor Kart zentrieren", color = Color(0xFFFFD54F), fontSize = 12.sp) },
-                            onClick = {
-                                showQuickMenu = false
-                                onResetTrack()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("🥽 VR-Modus (Quest / SBS)", color = Color(0xFFB388FF), fontSize = 12.sp) },
-                            onClick = {
-                                showQuickMenu = false
-                                onToggleVrMode()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("🔗 Kart koppeln (QR-Code)", color = Color(0xFF80D8FF), fontSize = 12.sp) },
-                            onClick = {
-                                showQuickMenu = false
-                                onPairClicked()
-                            }
-                        )
-                    }
                 }
 
-                // Settings Button (Always pinned and fully visible!)
+                // Battery Chip
+                BatteryChip(
+                    batteryLevel = kartInfo.battery ?: 0,
+                    isCableConnected = kartInfo.cable == true
+                )
+
+                // Settings Button
                 Surface(
                     onClick = onSettingsClicked,
-                    color = Color(0xCC263238),
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, Color(0x8890A4AE)),
-                    modifier = Modifier.height(32.dp)
+                    color = Color(0xCC1A2433),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0x66FFFFFF)),
+                    modifier = Modifier.size(36.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 9.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("⚙️", fontSize = 12.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.hud_settings), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("⚙️", fontSize = 16.sp)
                     }
                 }
 
-                // Main Menu / Pause Button
+                // Pause / Menu Button
                 Surface(
                     onClick = onMenuClicked,
-                    color = Color(0xCC182230),
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, Color(0xFF00E5FF)),
-                    modifier = Modifier.height(32.dp)
+                    color = Color(0xCC0091EA),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.5.dp, Color(0xFF80D8FF)),
+                    modifier = Modifier.height(36.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 9.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("⏸️", fontSize = 11.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("MENÜ", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
+                        Text("⏸️", fontSize = 13.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("MENÜ", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.White)
                     }
                 }
             }
         }
 
-        // MARIO KART ITEM SLOT (Top-Left under Stats - tap to use weapon!)
+        // 2. MARIO KART ITEM SLOT (Top-Left under Stats - tap to use weapon!)
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(start = 12.dp, top = 46.dp)
+                .padding(start = 16.dp, top = 58.dp)
         ) {
             val itemBorderColor = when {
-                isRouletteActive -> Color(0xFFFF9100)
-                activeWeapon != WeaponType.NONE -> Color(0xFFFF1744)
-                else -> Color(0x44FFFFFF)
+                isRouletteActive -> Color(0xFFFFD600)
+                activeWeapon != WeaponType.NONE -> Color(0xFFFF2A4D)
+                else -> Color(0x55FFFFFF)
             }
 
             Surface(
                 onClick = onFireWeapon,
-                color = Color(0xDD12161A),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.5.dp, itemBorderColor),
-                modifier = Modifier.size(54.dp)
+                color = Color(0xEE0B121E),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(2.dp, itemBorderColor),
+                shadowElevation = 8.dp,
+                modifier = Modifier.size(62.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     if (isRouletteActive) {
-                        Text(rouletteItem.icon, fontSize = 24.sp)
+                        Text(rouletteItem.icon, fontSize = 28.sp)
                     } else if (activeWeapon != WeaponType.NONE) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Text(activeWeapon.icon, fontSize = 20.sp)
+                            Text(activeWeapon.icon, fontSize = 24.sp)
                             Text(
                                 text = "x$ammo",
                                 color = Color(0xFFFFD54F),
-                                fontSize = 9.sp,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Black,
                                 fontFamily = FontFamily.Monospace
                             )
                         }
                     } else {
-                        Text("🎲", fontSize = 18.sp, color = Color(0x44FFFFFF))
+                        Text("❓", fontSize = 24.sp, color = Color(0x88FFFFFF))
                     }
                 }
             }
         }
 
-        // COMPASS TAPE (TOP CENTER - only shown when not racing towards a gate)
-        if (nextGateAngleDeg == null) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 44.dp)
-                    .clickable { onResetHeading() }
-            ) {
-                CompassTape(headingDeg = imuSnapshot.headingDeg)
-            }
-        }
-
-        // G-METER INSTRUMENT (TOP RIGHT)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 46.dp, end = 16.dp)
-        ) {
-            GMeterView(gLat = imuSnapshot.gLat, gLong = imuSnapshot.gLong)
-        }
-
-        // BOTTOM DASHBOARD (Steer, Throttle, Brake lamp, Input source)
+        // 3. BOTTOM-LEFT: Input & Brake Indicator
         Row(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 20.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(start = 18.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Steering Gauge
-            AxisGauge(label = stringResource(R.string.hud_steer), value = (driveCommand.steering / 127f * 100).toInt())
-            Spacer(modifier = Modifier.width(14.dp))
-
-            // Throttle & Boost Gauge
-            val throttlePercent = (driveCommand.throttle / 127f * 100).toInt()
-            if (driveCommand.throttle >= 120) {
-                Box(
-                    modifier = Modifier
-                        .background(Color(0xFFFFD600), RoundedCornerShape(2.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+            if (driveCommand.brake) {
+                Surface(
+                    color = Color(0xFFFF1744),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.5.dp, Color.White),
+                    shadowElevation = 6.dp
                 ) {
                     Text(
-                        text = stringResource(R.string.hud_boost),
-                        color = Color.Black,
-                        fontSize = 11.sp,
+                        text = "🛑 BREMSE",
+                        color = Color.White,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                     )
                 }
-            } else {
-                AxisGauge(label = stringResource(R.string.hud_throttle), value = throttlePercent)
             }
-            Spacer(modifier = Modifier.width(14.dp))
 
-            // Brake Lamp
-            Box(
-                modifier = Modifier
-                    .background(if (driveCommand.brake) Color(0xFFFF1744) else Color(0x33263238), RoundedCornerShape(2.dp))
-                    .border(1.dp, Color(0x66FF1744), RoundedCornerShape(2.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            Surface(
+                color = Color(0x99000000),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color(0x33FFFFFF))
             ) {
                 Text(
-                    text = stringResource(R.string.hud_brake),
-                    color = if (driveCommand.brake) Color.White else Color(0x66FFFFFF),
-                    fontSize = 10.sp,
+                    text = if (inputSource.contains("Gamepad", ignoreCase = true)) "🎮 Gamepad" else "📱 Touch",
+                    color = Color(0xCCFFFFFF),
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(14.dp))
-
-            // Input source
-            Text(
-                text = stringResource(R.string.hud_input, inputSource),
-                color = Color(0xAA00E5FF),
-                fontSize = 11.sp,
-                fontFamily = FontFamily.Monospace
-            )
         }
 
-        // 5. TRACK BUILDER FLOATING TOOLBAR
+        // 4. ARCADE SPEEDOMETER (Bottom-Right Corner)
+        val throttlePct = (driveCommand.throttle / 127f * 100).toInt().coerceAtLeast(0)
+        val isBoosting = driveCommand.throttle >= 120
+        ArcadeSpeedometerView(
+            speedPercent = throttlePct,
+            isBoosting = isBoosting,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 20.dp, bottom = 16.dp)
+        )
+
+        // 5. TRACK BUILDER FLOATING TOOLBAR (Only shown in Track Builder Mode)
         if (gameMode == GameMode.TRACK_BUILDER) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 14.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = Color(0xF0101722),
-                border = BorderStroke(1.dp, Color(0xFFFFD54F))
+                border = BorderStroke(1.5.dp, Color(0xFFFFD54F)),
+                shadowElevation = 10.dp
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("🛠️ BUILDER:", color = Color(0xFFFFD54F), fontSize = 10.sp, fontWeight = FontWeight.Black)
-                    Surface(onClick = { onAddBuilderElement("GATE") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
-                        Text("🚩 +TOR", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    Text("🛠️ EDITOR:", color = Color(0xFFFFD54F), fontSize = 11.sp, fontWeight = FontWeight.Black)
+                    Surface(onClick = { onAddBuilderElement("GATE") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
+                        Text("🚩 +TOR", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
                     }
-                    Surface(onClick = { onAddBuilderElement("COIN") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
-                        Text("🪙 +MÜNZE", color = Color(0xFFFFD54F), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    Surface(onClick = { onAddBuilderElement("COIN") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
+                        Text("🪙 +MÜNZE", color = Color(0xFFFFD54F), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
                     }
-                    Surface(onClick = { onAddBuilderElement("ITEM_BOX") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
-                        Text("📦 +BOX", color = Color(0xFF00E5FF), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    Surface(onClick = { onAddBuilderElement("ITEM_BOX") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
+                        Text("📦 +BOX", color = Color(0xFF00E5FF), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
                     }
-                    Surface(onClick = { onAddBuilderElement("DASH_PAD") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
-                        Text("⚡ +TURBO", color = Color(0xFFFF9100), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    Surface(onClick = { onAddBuilderElement("DASH_PAD") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
+                        Text("⚡ +TURBO", color = Color(0xFFFF9100), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
                     }
-                    Surface(onClick = { onAddBuilderElement("BANANA") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(4.dp)) {
-                        Text("🍌 +BANANE", color = Color(0xFFFFEB3B), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp))
+                    Surface(onClick = { onAddBuilderElement("BANANA") }, color = Color(0xCC1E293B), shape = RoundedCornerShape(6.dp)) {
+                        Text("🍌 +BANANE", color = Color(0xFFFFEB3B), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
                     }
-                    Surface(onClick = onSaveTrackClicked, color = Color(0xFF00E676), shape = RoundedCornerShape(4.dp)) {
-                        Text("💾 SPEICHERN", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                    Surface(onClick = onSaveTrackClicked, color = Color(0xFF00E676), shape = RoundedCornerShape(6.dp)) {
+                        Text("💾 FERTIG", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
                     }
                 }
             }
@@ -512,46 +390,90 @@ fun CockpitOverlay(
     }
 }
 
+/**
+ * Vibrant, modern Nintendo Arcade Speedometer with dynamic glowing arc and boost styling.
+ */
 @Composable
-fun HudChip(
-    label: String,
-    value: String,
-    isOk: Boolean = false,
-    isWarn: Boolean = false,
-    isAlert: Boolean = false
+fun ArcadeSpeedometerView(
+    speedPercent: Int,
+    isBoosting: Boolean,
+    modifier: Modifier = Modifier
 ) {
-    val borderColor = when {
-        isAlert -> Color(0xFFFF1744)
-        isWarn -> Color(0xFFFFAB00)
-        isOk -> Color(0xFF00E676)
-        else -> Color(0x4490A4AE)
-    }
-
     Box(
-        modifier = Modifier
-            .background(Color(0x77000000), RoundedCornerShape(3.dp))
-            .border(1.dp, borderColor, RoundedCornerShape(3.dp))
-            .padding(horizontal = 6.dp, vertical = 3.dp)
+        modifier = modifier
+            .size(110.dp)
+            .background(Color(0xD9080E1A), CircleShape)
+            .border(2.5.dp, if (isBoosting) Color(0xFFFFD54F) else Color(0x6600E5FF), CircleShape),
+        contentAlignment = Alignment.Center
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(label, color = Color(0x99FFFFFF), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(value, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Canvas(modifier = Modifier.fillMaxSize().padding(10.dp)) {
+            val strokeW = 9.dp.toPx()
+            // Background arc (240 degrees from 150 deg to 390 deg)
+            drawArc(
+                color = Color(0x33FFFFFF),
+                startAngle = 150f,
+                sweepAngle = 240f,
+                useCenter = false,
+                style = Stroke(width = strokeW, cap = StrokeCap.Round)
+            )
+
+            // Dynamic colorful speed arc
+            val sweep = (speedPercent.coerceIn(0, 100) / 100f) * 240f
+            val arcColor = when {
+                isBoosting -> Color(0xFFFF2A4D)
+                speedPercent > 75 -> Color(0xFFFF9100)
+                speedPercent > 40 -> Color(0xFFFFD600)
+                else -> Color(0xFF00E676)
+            }
+            if (sweep > 0) {
+                drawArc(
+                    color = arcColor,
+                    startAngle = 150f,
+                    sweepAngle = sweep,
+                    useCenter = false,
+                    style = Stroke(width = strokeW, cap = StrokeCap.Round)
+                )
+            }
+        }
+
+        // Speed Number & KM/H in center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            val displaySpeed = if (isBoosting) (speedPercent * 1.5).toInt() else speedPercent
+            Text(
+                text = "$displaySpeed",
+                color = Color.White,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black,
+                fontFamily = FontFamily.SansSerif
+            )
+            Text(
+                text = if (isBoosting) "⚡ BOOST" else "KM/H",
+                color = if (isBoosting) Color(0xFFFFD54F) else Color(0xFF00E5FF),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = 1.sp
+            )
         }
     }
 }
 
 @Composable
 fun BatteryChip(batteryLevel: Int, isCableConnected: Boolean = false) {
-    Box(
-        modifier = Modifier
-            .background(Color(0x77000000), RoundedCornerShape(3.dp))
-            .border(1.dp, if (isCableConnected) Color(0xFFFFB300) else Color(0x4490A4AE), RoundedCornerShape(3.dp))
-            .padding(horizontal = 6.dp, vertical = 3.dp)
+    Surface(
+        color = Color(0xDD0D131F),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, if (isCableConnected) Color(0xFFFFB300) else Color(0x55FFFFFF))
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.hud_battery), color = Color(0x99FFFFFF), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.width(4.dp))
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("🔋", fontSize = 12.sp)
+            Spacer(modifier = Modifier.width(5.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 repeat(4) { i ->
                     val color = if (i < batteryLevel) {
@@ -561,102 +483,15 @@ fun BatteryChip(batteryLevel: Int, isCableConnected: Boolean = false) {
                     }
                     Box(
                         modifier = Modifier
-                            .size(width = 5.dp, height = 9.dp)
-                            .background(color)
+                            .size(width = 5.dp, height = 10.dp)
+                            .background(color, RoundedCornerShape(1.dp))
                     )
                 }
             }
             if (isCableConnected) {
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("🔌", fontSize = 9.sp)
+                Text("⚡", fontSize = 10.sp)
             }
-        }
-    }
-}
-
-@Composable
-fun CompassTape(headingDeg: Float) {
-    val directions = arrayOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
-    val currentHdg = ((headingDeg % 360f + 360f) % 360f).toInt()
-
-    Box(
-        modifier = Modifier
-            .width(170.dp)
-            .height(26.dp)
-            .background(Color(0x88000000), RoundedCornerShape(4.dp))
-            .border(1.dp, Color(0x3300E5FF), RoundedCornerShape(4.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        val dirIdx = ((currentHdg + 22) / 45) % 8
-        val dirLabel = directions[dirIdx]
-
-        Text(
-            text = "${"%03d".format(currentHdg)}°  $dirLabel",
-            color = Color(0xFF00E5FF),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace
-        )
-    }
-}
-
-@Composable
-fun GMeterView(gLat: Float, gLong: Float) {
-    Box(
-        modifier = Modifier
-            .size(64.dp)
-            .background(Color(0x88000000), RoundedCornerShape(32.dp))
-            .border(1.dp, Color(0x4400E5FF), RoundedCornerShape(32.dp))
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val cx = size.width / 2f
-            val cy = size.height / 2f
-            val radius = min(cx, cy) - 5f
-
-            // Circles
-            drawCircle(color = Color(0x3300E5FF), radius = radius * 0.5f, center = Offset(cx, cy), style = Stroke(1f))
-            drawCircle(color = Color(0x5500E5FF), radius = radius, center = Offset(cx, cy), style = Stroke(1f))
-            // Crosshair
-            drawLine(color = Color(0x3300E5FF), start = Offset(cx - radius, cy), end = Offset(cx + radius, cy))
-            drawLine(color = Color(0x3300E5FF), start = Offset(cx, cy - radius), end = Offset(cx, cy + radius))
-
-            // G-ball position (clamped)
-            val bx = cx + (gLat.coerceIn(-1f, 1f) * radius)
-            val by = cy - (gLong.coerceIn(-1f, 1f) * radius)
-
-            drawCircle(color = Color(0x6600E5FF), radius = 5f, center = Offset(bx, by))
-            drawCircle(color = Color(0xFF00E5FF), radius = 2.5f, center = Offset(bx, by))
-        }
-    }
-}
-
-@Composable
-fun AxisGauge(label: String, value: Int) {
-    Column {
-        Text(
-            text = "$label: $value%",
-            color = Color(0x99FFFFFF),
-            fontSize = 9.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold
-        )
-        Box(
-            modifier = Modifier
-                .width(85.dp)
-                .height(5.dp)
-                .background(Color(0x44263238), RoundedCornerShape(3.dp))
-        ) {
-            val pct = (value.coerceIn(-100, 100) / 100f)
-            val fillWidth = 42.dp * kotlin.math.abs(pct)
-            val isNegative = pct < 0
-
-            Box(
-                modifier = Modifier
-                    .width(fillWidth)
-                    .height(5.dp)
-                    .padding(start = if (isNegative) (42.dp - fillWidth) else 42.dp)
-                    .background(if (isNegative) Color(0xFFFF9100) else Color(0xFF00E5FF), RoundedCornerShape(3.dp))
-            )
         }
     }
 }

@@ -141,8 +141,8 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
 
     private val _selectedCharacter = MutableStateFlow(
         try {
-            CharacterProfile.valueOf(prefs.getString("character_profile", CharacterProfile.MARIO.name) ?: CharacterProfile.MARIO.name)
-        } catch (_: Exception) { CharacterProfile.MARIO }
+            CharacterProfile.valueOf(prefs.getString("character_profile", CharacterProfile.TAHA.name) ?: CharacterProfile.TAHA.name)
+        } catch (_: Exception) { CharacterProfile.TAHA }
     )
     val selectedCharacter: StateFlow<CharacterProfile> = _selectedCharacter.asStateFlow()
 

@@ -6,6 +6,7 @@ object GameAssetHelper {
     fun getDrawableResId(name: String): Int {
         return when (name) {
             "bg_title_art" -> R.drawable.bg_title_art
+            "art_char_taha" -> R.drawable.art_char_taha
             "art_char_mario" -> R.drawable.art_char_mario
             "art_char_luigi" -> R.drawable.art_char_luigi
             "art_char_peach" -> R.drawable.art_char_peach
