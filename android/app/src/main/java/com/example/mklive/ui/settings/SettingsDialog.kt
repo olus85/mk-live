@@ -114,7 +114,7 @@ fun SettingsDialog(
                         fontFamily = FontFamily.Monospace
                     )
                     Text(
-                        text = "v2.3.2 • AAA EDITION",
+                        text = "v2.4.0 • AAA EDITION",
                         color = Color(0x88FFFFFF),
                         fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace
