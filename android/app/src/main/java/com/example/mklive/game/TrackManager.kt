@@ -31,9 +31,9 @@ object TrackManager {
             TrackPreset(
                 id = "room_dynamic_arcade",
                 name = "⚡ Dynamic Room Arcade",
-                cup = "🏆 Wohnzimmer Cup",
+                cup = "🏆 Dynamic Arcade",
                 difficulty = "★☆☆",
-                drawableResName = "art_cup_mushroom",
+                drawableResName = "art_mode_grand_prix",
                 elements = listOf(
                     TrackElementData("COIN", 0.0f, 1.0f),
                     TrackElementData("DASH_PAD", 0.0f, 1.8f),

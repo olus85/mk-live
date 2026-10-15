@@ -8,22 +8,22 @@ Drive and record **Mario Kart Live: Home Circuit** — now with **Meta Quest 3 V
 
 ---
 
-## 📸 Ingame & UI Showcase (v2.3.2 AAA Edition)
+## 📸 Ingame & UI Showcase (v2.4.0 AAA Edition)
 
 | 🏎️ Fahrer-Auswahl (Taha & Mario) | 🦖 Fahrer-Auswahl (Bowser & Yoshi) |
 | :---: | :---: |
 | <img src="docs/screenshots/02_character_selection_taha.png" width="100%"> | <img src="docs/screenshots/03_character_selection_bowser.png" width="100%"> |
 | **Taha (Minecraft Creeper Monster Truck), Mario, Luigi, Peach** | **Bowser (Flame Buggy), Yoshi, Cyber Kart** |
 
-| 🏆 Spielmodi & Grand Prix | 🍄 Cup & Strecken-Auswahl |
+| 🏆 Spielmodi & Grand Prix | ⚡ Strecken-Auswahl (Dynamic & Custom) |
 | :---: | :---: |
-| <img src="docs/screenshots/04_game_modes.png" width="100%"> | <img src="docs/screenshots/05_cup_selection.png" width="100%"> |
+| <img src="docs/screenshots/04_game_modes.png" width="100%"> | <img src="docs/screenshots/05_track_selection.png" width="100%"> |
 | **Grand Prix, Ballon-Schlacht, Zeitfahren, Streckeneditor** | **⚡ Dynamic Room Arcade & Drive & Paint Circuit** |
 
 | 🚀 3D Raketen-Kampf & Partikel | 🕹️ GameSir Controller Priorität |
 | :---: | :---: |
 | <img src="docs/screenshots/07_rocket_combat.png" width="100%"> | <img src="docs/screenshots/08_settings_gamepad.png" width="100%"> |
-| **Red Shell Rakete mit Rauch/Feuer-Schweif & Ampelstart** | **Freie Kamerasicht (Touch-Controls optional)** |
+| **Red Shell Rakete mit Rauch/Feuer-Schweif & Ampelstart** | **Freie Kamerasicht (Touch-Controls optional deaktivierbar)** |
 
 <p align="center">
   <img src="docs/screenshots/06_cockpit_ar_hud.png" alt="Cockpit AR HUD" width="100%">
@@ -34,33 +34,39 @@ Drive and record **Mario Kart Live: Home Circuit** — now with **Meta Quest 3 V
 ### 📄 Druckbare DIN-A4 Smart-Marker (`docs/markers/`)
 Bereit zum Ausdrucken für deine Wohnung:
 * 🖨️ **[HTML Druckvorlage öffnen (`docs/markers/print_markers.html`)](docs/markers/print_markers.html)**: Mit `Strg + P` direkt im Browser auf DIN-A4 ausdrucken!
-* **Tor 1 bis 4 (Checkpoints & Start/Ziel)**: Drift-freies Tracking beim Vorbeifahren.
-* **No-Go Zonen / Virtuelle Wände**: Warnbarrieren vor Möbeln und Wänden.
+* **Tor 1 bis 4 (Checkpoints & Start/Ziel)**: Drift-freies optisches Tracking beim Vorbeifahren.
+* **No-Go Zonen / Virtuelle Wände**: Warnbarrieren und Sperrzonen vor Möbeln und Wänden.
 
 ---
 
-## 🌟 Highlights & Key Features
+## 🌟 Highlights & Key Features (v2.4.0 AAA Edition)
 
-* **🏎️💨 AR Combat Edition & Virtual Circuit Engine (New in v2.0.0!):**
-  * **3D Floor Homography & Ground Projection:** Real-world camera geometry coupled with real-time IMU gyroscopic pitch and roll telemetry.
-  * **Interactive Gold Coins:** Rotating 3D gold coins floating on the floor. Driving over them rewards the iconic chime, glitter starbursts, coin counter increments, and a +1.5% speed buff per coin (up to +15% top speed).
-  * **Holographic ?-Item Boxes:** Pulsating 3D question-mark cubes that shatter into 16 crystalline shards and trigger the Item Roulette.
-  * **Turbo Boost Dash Pads:** Flowing neon chevron arrows on the carpet delivering an instant 100% Nitro Boost with camera speed blur lines.
-  * **Virtual Track Gates & Lap Timing:** Interactive checkpoint archways (`🚩 GATE 1..4` & `🏁 FINISH / LAP`) placeable on the floor via D-Pad UP or HUD button. Real-time lap timer, lap counting, and personal best records.
-  * **⚔️ Full Combat Arsenal:**
-    * **[L1 / LB] (Hold):** Minigun rapid fire (18 Hz) with bumper muzzle flashes, tracer bullets, screen shake, and rumble.
-    * **[X]:** Missile Launcher with Lock-On HUD reticle, target tracking, comic explosions, and haptics.
-    * **[Y]:** Bob-Omb EMP shockwave detonator.
-    * **[B]:** Banana Peels dropped behind the kart (causes 360° spin-out and power cut).
-    * **[A]:** Mushroom Boost & Active Item trigger.
-    * **[R1 / RB]:** Weapon Select / Horn.
-* **🔊 Low-Latency SoundPool SFX & Dynamic Engine RPM Synthesizer:**
-  * Procedurally synthesized 16-bit PCM 44.1 kHz arcade audio engine (zero external dependencies).
-  * Pitch-modulated kart engine sound scaling in real time with live throttle telemetry.
-* **🥽 Meta Quest 3 & VR Headset Stereoscopic 3D AR:**
-  * Dual-viewport Side-by-Side (SBS) rendering with inter-pupillary distance (IPD) parallax: AR coins, gates, and boxes appear with tangible 3D depth directly in your room.
-* **🛠️ Video Recorder Color Channel Inversion Bugfix:**
-  * Hardware-accelerated Skia `ColorMatrix` RGB/BGR channel swapper fixing the inverted red/blue colors (cyan Mario hat) on Google Tensor (Pixel 7 Pro) and Mali/Exynos GPUs, with AR overlay burn-in.
+* **⚡ Dynamic Room Arcade (0% Wandkollisionen & Möbel-Clipping):**
+  * **Intelligenter Fahrkorridor:** Anstelle starrer, fest platzierter Strecken, die in Sofas oder Wänden enden, projiziert die Dynamic Room Engine Tore, Münzen und Turbo-Pads fortlaufend direkt vor das Kart in Fahrtrichtung (bei 2.5m, 5.0m und 7.5m).
+  * **Flüssiger Spielfluss:** Jedes durchfahrene Tor triggert sofort einen Sound- und Partikeleffekt, zählt die Rundenzeit und spannt nahtlos den nächsten Streckenabschnitt auf.
+* **🛠️ "Drive & Paint" Streckeneditor & Custom Circuits:**
+  * **Wohnungs-Rundkurs abfahren:** Fahre mit dem echten Kart deine Wunschstrecke in der Wohnung ab. Start/Ziel, Checkpoints 1 bis 4, Münzenfelder und Dash-Pads werden genau an deiner realen Fahrspur platziert.
+  * **Persistente Speicherung:** Eigene Strecken werden lokal gespeichert und stehen im Streckenmenü sofort zur Auswahl.
+* **🎮 GameSir / Bluetooth Gamepad Fokus & Clean FPV Cockpit:**
+  * **Hardware-Controller First:** Optimiert für GameSir G8 Galileo, G8+, X2s sowie Xbox Wireless, PlayStation DualSense und Switch Pro Controller.
+  * **Optionale Touch-Buttons:** Auf Smartphone und Tablet lassen sich On-Screen Touch-Buttons in den Einstellungen (`Optionen -> Touch-Steuerung einblenden`) komplett ausblenden – für eine freie, ungestörte FPV-Kamerasicht wie im echten Rennkart!
+  * **60 Hz Hardware V-Sync Input Loop:** Sub-Millisekunden-Reaktionszeit zwischen Stick-Eingabe und Kart-Lenkmotor.
+* **🚀 3D Waffen-Arsenal & Visuelle Partikeleffekte:**
+  * **3D Red Shell Rakete:** Plastisch gerendertes 3D-Geschoss mit feurigem Flammen-Schweif, animiertem Rauch und parabolischer Flugbahn.
+  * **18 Hz Minigun:** Zwillingsrohr-Mündungsfeuer mit dynamischer Lichtreflektion auf dem Boden, Leuchtspurmunition und Kameraschütteln.
+  * **Bob-Omb EMP:** 3D-Bombe mit brennender Lunte und expandierender Schockwellen-Druckwelle.
+  * **Bananenschalen:** Physikalisch auf dem Boden abgelegte Hindernisse mit 360°-Dreher bei Berührung.
+* **🪙 Interaktive 3D Goldmünzen & Item-Boxen:**
+  * Rotierende 3D-Goldmünzen mit Stern-Prägung (+1.5% Speed-Buff pro Münze bis zu +15% Maximalgeschwindigkeit).
+  * Holographische Fragezeichen-Würfel mit pulsierendem Glow und Item-Roulette.
+  * Turbo Boost Dash-Pads mit fließenden Neon-Chevrons und High-Speed-Warp-Streifen.
+* **🔊 Low-Latency SoundPool SFX & Dynamischer Motorensound:**
+  * Prozedural synthetisierter 16-Bit PCM 44.1 kHz Arcade-Audio-Synthesizer.
+  * Stufenlose Tonhöhen-Modulation des Kart-Motors synchron zu Gashebel und Telemetrie.
+* **🥽 Meta Quest 3 Stereoskopisches 3D-AR:**
+  * Side-by-Side (SBS) Dual-Viewport Rendering mit einstellbarem Augenabstand (IPD).
+* **🛠️ Skia ColorMatrix Farbraum-Korrektur:**
+  * Hardwarebeschleunigter RGB/BGR Channel-Swapper zur Behebung vertauschter Rot-/Blaukanäle auf Google Tensor (Pixel 7 Pro) und Mali-GPUs.
 
 ---
 
@@ -122,7 +128,7 @@ Bereit zum Ausdrucken für deine Wohnung:
 1. **OpenKart SDK:** Runs an 802.11 access point tailored to Nintendo's LP2P protocol and handles the initial pairing handshake and encrypted communication.
 2. **Video Worker (`video_worker.py`):** Reassembles UDP RTP H.264 packets into a clean stream for both native decoders and MJPEG fallback on port `9001`.
 3. **Drive Server (`drive_web.py`):** Translates WebSocket control inputs into Nintendo control packets and streams IMU telemetry on port `9000`.
-4. **Android & Quest App:** Connects to the base station via WebSocket and HTTP, receives video and telemetry, handles input at 30 Hz, and renders both 2D HUD and immersive 3D VR stereoscopic views.
+4. **Android & Quest App:** Connects to the base station via WebSocket and HTTP, receives video and telemetry, handles input at 60 Hz hardware V-Sync, and renders both 2D HUD and immersive 3D VR stereoscopic views.
 
 ---
 
@@ -160,7 +166,7 @@ systemctl --user status mk-live-openkart mk-live-video mk-live-web
    *(Or double-click `Install_Quest3.desktop` on Linux)*
 4. Alternatively, sideload using SideQuest or standard ADB:
    ```bash
-   adb install -r -g MK-Live-Cockpit-v1.1.0-Quest3.apk
+   adb install -r -g app-quest-release.apk
    ```
 5. Inside the Quest 3 headset, open **App Library** -> filter by **Unknown Sources** -> launch **MK Live** (look for the Mario icon wearing the VR headset!).
 6. Configure the Base Station IP in **Settings**, grab your Touch Controllers, and press **[Y]** to drive in full VR!
@@ -169,10 +175,10 @@ systemctl --user status mk-live-openkart mk-live-video mk-live-web
 
 ### 3. Android Smartphone Installation
 
-1. Download `MK-Live-Cockpit-v1.1.0-Phone.apk` from the [Releases](https://github.com/olus85/mk-live/releases) page.
+1. Download `app-phone-release.apk` from the [Releases](https://github.com/olus85/mk-live/releases) page.
 2. Install via ADB or file manager:
    ```bash
-   adb install -r MK-Live-Cockpit-v1.1.0-Phone.apk
+   adb install -r app-phone-release.apk
    ```
 3. Open the **MK Live** app on your phone.
 4. Tap **⚙ Settings** and enter the IP address of your Base Station PC (e.g. `192.168.0.105`).

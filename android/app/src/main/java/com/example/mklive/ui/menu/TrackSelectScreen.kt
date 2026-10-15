@@ -85,7 +85,7 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                 // Title
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "CUP",
+                        text = "STRECKE",
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Black,

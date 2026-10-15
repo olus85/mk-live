@@ -96,7 +96,7 @@ fun GarageScreen(viewModel: CockpitViewModel) {
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("WEITER ZUM CUP", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Black)
+                        Text("WEITER ZUR STRECKE", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Black)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("▶", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
                     }
