@@ -30,14 +30,7 @@ import com.example.mklive.ui.main.CockpitViewModel
 fun GarageScreen(viewModel: CockpitViewModel) {
     val selectedCharacter by viewModel.selectedCharacter.collectAsState()
 
-    val characters = listOf(
-        CharacterProfile.MARIO,
-        CharacterProfile.LUIGI,
-        CharacterProfile.PEACH,
-        CharacterProfile.BOWSER,
-        CharacterProfile.YOSHI,
-        CharacterProfile.CYBER_KART
-    )
+    val characters = remember { CharacterProfile.entries }
 
     Box(
         modifier = Modifier

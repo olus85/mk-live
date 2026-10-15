@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.mklive"
         minSdk = 24
         targetSdk = 36
-        versionCode = 8
-        versionName = "2.3.0"
+        versionCode = 9
+        versionName = "2.3.1"
     }
 
     flavorDimensions += "device"
