@@ -55,6 +55,7 @@ fun SettingsDialog(
     isEngineSoundEnabled: Boolean,
     isVrMode: Boolean,
     currentLanguage: String,
+    isTouchControlsEnabled: Boolean = false,
     onSetRecordingOverlay: (Boolean) -> Unit,
     onSetRecordingAudio: (Boolean) -> Unit,
     onSetRecordingColorSwap: (Boolean) -> Unit,
@@ -63,6 +64,7 @@ fun SettingsDialog(
     onSetEngineSoundEnabled: (Boolean) -> Unit,
     onSetVrMode: (Boolean) -> Unit,
     onSetLanguage: (String) -> Unit,
+    onSetTouchControlsEnabled: (Boolean) -> Unit = {},
     onSave: (hostIp: String, videoMode: VideoStreamMode) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -76,6 +78,7 @@ fun SettingsDialog(
     var engineSoundEnabled by remember { mutableStateOf(isEngineSoundEnabled) }
     var vrMode by remember { mutableStateOf(isVrMode) }
     var selectedLang by remember { mutableStateOf(currentLanguage) }
+    var touchControls by remember { mutableStateOf(isTouchControlsEnabled) }
 
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("🎮 GAMEPLAY", "🕶️ AR & GRAFIK", "🔊 AUDIO", "🕹️ STEUERUNG", "🌐 NETZWERK")
@@ -343,8 +346,30 @@ fun SettingsDialog(
                         3 -> { // 🕹️ CONTROLS
                             Column(
                                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                // Touch Controller Toggle
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Touch-Steuerung (On-Screen)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("Virtuelles Lenkrad & Pedale einblenden. Für GameSir / physische Gamepads standardmäßig DEAKTIVIERT für freie Sicht!", color = Color(0xFF80D8FF), fontSize = 10.sp)
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Switch(
+                                        checked = touchControls,
+                                        onCheckedChange = {
+                                            touchControls = it
+                                            onSetTouchControlsEnabled(it)
+                                        },
+                                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFF00E5FF), checkedTrackColor = Color(0x6600E5FF))
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text("GAMEPAD & CONTROLLER BELEGUNG:", color = Color(0xFFFFD54F), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 Text("• R2 / Gas-Trigger: Beschleunigen (bis zu 100% Nitro)", color = Color.White, fontSize = 10.sp)
                                 Text("• L2 / Bremse: Bremsen & Rückwärtsgang", color = Color.White, fontSize = 10.sp)

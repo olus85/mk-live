@@ -48,6 +48,7 @@ fun MainMenuScreen(viewModel: CockpitViewModel) {
     val engineSoundEnabled by viewModel.engineSoundEnabled.collectAsState()
     val isVrMode by viewModel.isVrMode.collectAsState()
     val currentLanguage by viewModel.currentLanguage.collectAsState()
+    val touchControlsEnabled by viewModel.touchControlsEnabled.collectAsState()
     val serverQrBitmap by viewModel.serverQrBitmap.collectAsState()
     val serverPairingSsid by viewModel.serverPairingSsid.collectAsState()
     val serverPairingChannel by viewModel.serverPairingChannel.collectAsState()
@@ -344,6 +345,7 @@ fun MainMenuScreen(viewModel: CockpitViewModel) {
             isEngineSoundEnabled = engineSoundEnabled,
             isVrMode = isVrMode,
             currentLanguage = currentLanguage,
+            isTouchControlsEnabled = touchControlsEnabled,
             onSetRecordingOverlay = { viewModel.setRecordingOverlay(it) },
             onSetRecordingAudio = { viewModel.setRecordingAudio(it) },
             onSetRecordingColorSwap = { viewModel.setRecordingColorSwap(it) },
@@ -352,6 +354,7 @@ fun MainMenuScreen(viewModel: CockpitViewModel) {
             onSetEngineSoundEnabled = { viewModel.setEngineSoundEnabled(it) },
             onSetVrMode = { viewModel.setVrMode(it) },
             onSetLanguage = { viewModel.setLanguage(context, it) },
+            onSetTouchControlsEnabled = { viewModel.setTouchControlsEnabled(it) },
             onSave = { newIp, newMode -> viewModel.saveSettings(newIp, newMode) },
             onDismiss = { viewModel.closeSettings() }
         )

@@ -3,6 +3,12 @@ package com.example.mklive.ar
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -10,10 +16,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import com.example.mklive.ar.model.ArElement
 import com.example.mklive.combat.WeaponType
+import kotlinx.coroutines.isActive
 
 /**
  * Jetpack Compose Canvas overlay for rendering AR elements,
  * Gatling crosshairs, and Rocket Lock-On indicators.
+ * Driven by an ultra-smooth 60/120 FPS hardware V-Sync loop.
  */
 @Composable
 fun ArOverlayView(
@@ -26,7 +34,18 @@ fun ArOverlayView(
     isMinigunFiring: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    // Continuous 60/120 Hz V-Sync hardware loop: renders every single display frame!
+    var frameTick by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            withFrameNanos { nanos ->
+                frameTick = nanos
+            }
+        }
+    }
+
     Canvas(modifier = modifier.fillMaxSize()) {
+        val tick = frameTick // Subscribe to v-sync tick for smooth rendering
         val w = size.width
         val h = size.height
 

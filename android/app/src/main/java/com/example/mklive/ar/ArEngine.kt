@@ -101,6 +101,8 @@ class ArEngine(
         spawnDefaultTrackElements()
     }
 
+    var isDynamicRoomArcade: Boolean = true
+
     fun loadTrack(preset: TrackPreset) {
         elements.clear()
         tracker.reset(0f, 0f, 0f)
@@ -110,6 +112,7 @@ class ArEngine(
         totalRaceTimer = 0f
         completedLapTimes.clear()
         activeGateNumber = 1
+        isDynamicRoomArcade = (preset.id == "room_dynamic_arcade")
 
         preset.elements.forEach { elemData ->
             val (wx, wy) = tracker.toWorld(elemData.x, elemData.y)
@@ -128,6 +131,33 @@ class ArEngine(
                 else -> CoinElement(UUID.randomUUID().toString(), wx, wy)
             }
             elements.add(elem)
+        }
+    }
+
+    private fun spawnNextDynamicGate(gateNum: Int) {
+        // Distance ahead for next checkpoint: 3.2m directly in the forward driving path
+        val (gx, gy) = tracker.toWorld(0.0f, 3.2f)
+        val isFinish = (gateNum == 4)
+        val gate = GateElement(
+            id = UUID.randomUUID().toString(),
+            x = gx,
+            y = gy,
+            gateNumber = gateNum,
+            isFinishLine = isFinish
+        )
+        elements.add(gate)
+
+        // Spawn interactive arcade item / coin cluster along the corridor
+        val rand = kotlin.random.Random.nextInt(3)
+        val (ix, iy) = tracker.toWorld(0.0f, 1.8f)
+        when (rand) {
+            0 -> elements.add(ItemBoxElement(UUID.randomUUID().toString(), ix, iy))
+            1 -> elements.add(DashPadElement(UUID.randomUUID().toString(), ix, iy))
+            else -> {
+                elements.add(CoinElement(UUID.randomUUID().toString(), ix, iy))
+                val (c2x, c2y) = tracker.toWorld(0.0f, 2.4f)
+                elements.add(CoinElement(UUID.randomUUID().toString(), c2x, c2y))
+            }
         }
     }
 
@@ -345,12 +375,19 @@ class ArEngine(
                                 soundManager.playFinalLapFanfare()
                             }
                             _currentLap.value++
-                            // Reset all gates for next lap
-                            elements.filterIsInstance<GateElement>().forEach { it.isPassedThisLap = false }
                             activeGateNumber = 1
+                            if (isDynamicRoomArcade) {
+                                spawnNextDynamicGate(1)
+                            } else {
+                                // Reset all static gates for next lap
+                                elements.filterIsInstance<GateElement>().forEach { it.isPassedThisLap = false }
+                            }
                         }
                     } else {
                         activeGateNumber++
+                        if (isDynamicRoomArcade) {
+                            spawnNextDynamicGate(activeGateNumber)
+                        }
                     }
                 }
             }
@@ -412,7 +449,11 @@ class ArEngine(
             isRocket = isRocket,
             targetX = target?.x,
             targetY = target?.y
-        )
+        ).apply {
+            onEmitTrail = { sx, sy ->
+                particleSystem.emitRocketTrail(sx, sy)
+            }
+        }
         elements.add(proj)
     }
 

@@ -204,12 +204,19 @@ fun TrackSelectScreen(viewModel: CockpitViewModel) {
                                     maxLines = 1
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
-                                val gates = track.elements.count { it.type == "GATE" }
-                                val coins = track.elements.count { it.type == "COIN" }
-                                val pads = track.elements.count { it.type == "DASH_PAD" }
+                                val summaryText = when (track.id) {
+                                    "room_dynamic_arcade" -> "🚀 Dynamische Tore vor dem Kart • 0% Wandkollision"
+                                    "track_builder_circuit" -> "🎨 Mit Kart abfahren • Tore frei im Raum platzieren"
+                                    else -> {
+                                        val gates = track.elements.count { it.type == "GATE" }
+                                        val coins = track.elements.count { it.type == "COIN" }
+                                        val pads = track.elements.count { it.type == "DASH_PAD" }
+                                        "🚩 $gates Tore • 🪙 $coins Münzen • ⚡ $pads Turbo"
+                                    }
+                                }
                                 Text(
-                                    text = "🚩 $gates Tore • 🪙 $coins Münzen • ⚡ $pads Turbo",
-                                    color = Color(0xBBFFFFFF),
+                                    text = summaryText,
+                                    color = if (isSelected) Color(0xFF80D8FF) else Color(0xBBFFFFFF),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Monospace,

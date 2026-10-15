@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Mario Kart Live - DIN-A4 Smart Marker Druckvorlage</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f6f9;
+            color: #111;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            margin: 10mm auto;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            page-break-after: always;
+            break-after: page;
+            position: relative;
+        }
+        @media print {
+            body {
+                background: white;
+            }
+            .page {
+                margin: 0;
+                box-shadow: none;
+                width: 100%;
+                height: 100%;
+                min-height: 100%;
+                padding: 10mm;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        .banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #E52521;
+            padding-bottom: 8px;
+        }
+        .banner h1 {
+            margin: 0;
+            font-size: 20pt;
+            font-weight: 900;
+            color: #E52521;
+            letter-spacing: 1px;
+        }
+        .banner .subtitle {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #666;
+        }
+        .banner .badge {
+            background: #00E5FF;
+            color: black;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 9pt;
+        }
+        .marker-card {
+            text-align: center;
+            margin: 10mm 0;
+        }
+        .gate-title {
+            font-size: 26pt;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .gate-desc {
+            font-size: 12pt;
+            color: #444;
+            margin-bottom: 15px;
+        }
+        .marker-frame {
+            display: inline-block;
+            padding: 12px;
+            background: white;
+            border: 8px dashed #222;
+            border-radius: 12px;
+        }
+        .marker-frame.finish {
+            border: 8px dashed #FFD700;
+            background: #FFFDF0;
+        }
+        .marker-frame.danger {
+            border: 8px dashed #E52521;
+            background: #FFF5F5;
+        }
+        .marker-img {
+            width: 135mm;
+            height: 135mm;
+            image-rendering: pixelated;
+            display: block;
+        }
+        .fold-guide {
+            border-top: 2px dashed #999;
+            padding-top: 10px;
+            margin-top: 15mm;
+            font-size: 9pt;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .fold-guide strong {
+            color: #111;
+        }
+        .checkered-bar {
+            height: 12px;
+            background: repeating-linear-gradient(45deg, #000, #000 12px, #fff 12px, #fff 24px);
+            margin: 8px 0;
+            border-radius: 3px;
+        }
+        .hazard-bar {
+            height: 14px;
+            background: repeating-linear-gradient(45deg, #FFCC00, #FFCC00 12px, #000 12px, #000 24px);
+            margin: 8px 0;
+            border-radius: 3px;
+        }
+        .print-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #E52521;
+            color: white;
+            font-size: 16pt;
+            font-weight: 900;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(229,37,33,0.5);
+            z-index: 1000;
+        }
+        .print-btn:hover {
+            background: #C31E1B;
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn no-print" onclick="window.print()">🖨️ JETZT AUF DIN-A4 DRUCKEN</button>
+
+    <!-- SEITE 1: ÜBERSICHT & ANLEITUNG -->
+    <div class="page">
+        <div class="banner">
+            <div>
+                <h1>MARIO KART LIVE</h1>
+                <div class="subtitle">SMARTE DIN-A4 ORIENTIERUNGS-MARKER & NO-GO ZONEN</div>
+            </div>
+            <div class="badge">AAA SMART TRACK SYSTEM</div>
+        </div>
+
+        <div style="margin: 20px 0; font-size: 11pt; line-height: 1.6;">
+            <h2 style="color: #0066CC; margin-top: 0;">🎮 Wie funktionieren die Smart-Marker?</h2>
+            <p>Diese hochauflösenden <strong>DIN-A4 Markierungsblätter</strong> lösen das Problem von Wand-Kollisionen und Drift in deiner Wohnung:</p>
+            <ul>
+                <li><strong>Tor 1 bis 4 (Checkpoints & Zielgerade):</strong> Platziere sie an deinen gewünschten Streckenpunkten (z.B. vor dem Sofa, im Flur, an der Zimmertür). Beim Vorbeifahren erkennt die Kamera den Marker und korrigiert sofort die Position (0% Drift)!</li>
+                <li><strong>No-Go Area / Virtuelle Wände:</strong> Platziere diese Marker vor Schränken, Tischbeinen oder Türen. Die AR-Engine projiziert dort ein leuchtendes Energiefeld / Stopp-Barriere, sodass dein Kart rechtzeitig bremst oder ausweicht.</li>
+            </ul>
+
+            <div class="checkered-bar"></div>
+
+            <h3 style="color: #222; margin-top: 20px;">✂️ Aufstell-Optionen:</h3>
+            <ol>
+                <li><strong>Option A (Stehender Aufsteller):</strong> Das Blatt an der unteren gestrichelten Linie nach hinten falten, damit es stabil wie ein Zelt auf dem Boden steht.</li>
+                <li><strong>Option B (Boden-Tape / Möbel):</strong> Mit Malerkrepp oder Tesa flach auf den Teppich / Parkett kleben oder an einen Karton / Türrahmen heften.</li>
+            </ol>
+
+            <div style="background: #E8F5E9; border-left: 5px solid #4CAF50; padding: 12px; margin-top: 20px; border-radius: 4px;">
+                <strong>💡 Tipp für GameSir-Controller:</strong>
+                Fahre die Tore einfach der Reihe nach (1 &rarr; 2 &rarr; 3 &rarr; 4) mit dem Controller ab. Nach Tor 4 wird die Runde gezählt ("RUNDE 2")!
+            </div>
+        </div>
+
+        <div class="fold-guide">
+            <span>Druckoptimiert für DIN-A4 Hochformat (100% Skalierung im Druckdialog wählen)</span>
+            <strong>SEITE 1 / 7 • ÜBERSICHT</strong>
+        </div>
+    </div>
+
+    <!-- SEITE 2: TOR 1 -->
+    <div class="page">
+        <div class="banner">
+            <div>
+                <h1>MARIO KART LIVE</h1>
+                <div class="subtitle">SMART CHECKPOINT SYSTEM • ARUCO ID 01</div>
+            </div>
+            <div class="badge" style="background:#00E676;">CHECKPOINT 1</div>
+        </div>
+        <div class="checkered-bar"></div>
+        <div class="marker-card">
+            <div class="gate-title" style="color: #00C853;">🚩 TOR 1: START & CHECKPOINT</div>
+            <div class="gate-desc">Platziere dieses Blatt an der Startlinie deines Wohnzimmer-Kurses</div>
+            <div class="marker-frame">
+                <img class="marker-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAJYCAAAAACbDccAAAALuElEQVR4Ae3BgQ3AQBDCsGT/oekUnKoXtswUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3yhtAnfXIg9MkbQp/0yYHQJ28IfdInB0KfvCH0SZ8cCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYMcCH3SF/rkDXIg9Elf6JM3yIHQJ32hT94gB0Kf9IU+eYPMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEzBB8PO9middoPrAAAAAElFTkSuQmCC" alt="Gate 1 Marker">
+            </div>
+        </div>
+        <div class="fold-guide">
+            <span>✂️ Entlang dieser Linie falten für Boden-Aufsteller</span>
+            <strong>SEITE 2 / 7 • TOR 1 (START)</strong>
+        </div>
+    </div>
+
+    <!-- SEITE 3: TOR 2 -->
+    <div class="page">
+        <div class="banner">
+            <div>
+                <h1>MARIO KART LIVE</h1>
+                <div class="subtitle">SMART CHECKPOINT SYSTEM • ARUCO ID 02</div>
+            </div>
+            <div class="badge" style="background:#00B0FF;">CHECKPOINT 2</div>
+        </div>
+        <div class="checkered-bar"></div>
+        <div class="marker-card">
+            <div class="gate-title" style="color: #0091EA;">🚩 TOR 2: S-KURVE / ZWISCHENZEIT</div>
+            <div class="gate-desc">Platziere dieses Blatt am ersten Wendepunkt oder im Flur</div>
+            <div class="marker-frame">
+                <img class="marker-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAJYCAAAAACbDccAAAALxklEQVR4Ae3BsRHAQAzDMHL/oZUVvlEKnwCZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ+EG6ZN5Fm6QPpln4Qbpk3kWbpA+mWfhBumTeRZukD6ZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQGmWehT26QeRb65AaZZ6FPbpB5FvrkBplnoU9ukHkW+uQG+UG4QfpCn/TJD8IN0hf6pE9+EG6QvtAnffKDcIP0hT7pkx+EG6Qv9Emf/CDcIH2hT/rkB+EG6Qt90ic/CDdIX+iTPvlBuEH6Qp/0yQ/CDdIX+qRPfhBukL7QJ33yg3CD9IU+6ZMfhBukL/RJn/wg3CB9oU/65AfhBukLfdInPwg3SF/okz75QbhB+kKf9MkPwg3SF/qkT34QbpC+0Cd98oNwg/SFPumTH4QbpC/0SZ/8INwgfaFP+uQH4QbpC33SJz8IN0hf6JM++UG4QfpCn/TJD8IN0hf6pE9+EG6QvtAnffKDcIP0hT7pkx+EG6Qv9Emf/CDcIH2hT/rkB+EG6Qt90ic/CDdIX+iTPvlBuEH6Qp/0yQ/CDdIX+qRPfhBukL7QJ33yg3CD9IU+6ZMfhBukL/RJn/wg3CB9oU/65AfhBukLfdInPwg3SF/okz75QbhB+kKf9MkPwg3SF/qkT34QbpC+0Cd98oNwg/SFPumTH4QbpC/0SZ/8INwgfaFP+uQH4QbpC33SJz8IN0hf6JM++UG4QfpCn/TJD8IN0hf6pE9+EG6QvtAnffKDcIP0hT7pkx+EG6Qv9Emf/CDcIH2hT/rkB+EG6Qt90ic/CDdIX+iTPvlBuEH6Qp/0yQ/CDdIX+qRPfhBukL7QJ33yg3CD9IU+6ZMfhBukL/RJn/wg3CB9oU/65AfhBukLfdInPwg3SF/okz75QbhB+kKf9MkPwg3SF/qkT34QbpC+0Cd98oNwg/SFPumTH4QbpC/0SZ/8INwgfaFP+uQH4QbpC33SJz8IN0hf6JM++UG4QfpCn/TJD8IN0hf6pE9+EG6QvtAnffKDcIP0hT7pkx+EG6Qv9Emf/CDcIH2hT/rkB+EG6Qt90ic/CDdIX+iTPvlBuEH6Qp/0yQ/CDdIX+qRPfhBukL7QJ33yg3CD9IU+6ZMfhBukL/RJn/wg3CB9oU/65AfhBukLfdInPwg3SF/okz75QbhB+kKf9MkPwg3SF/qkT34QbpC+0Cd98oNwg/SFPumTH4QbpC/0SZ/8INwgfaFP+uQH4QbpC33SJz8IN0hf6JM++UG4QfpCn/TJD8IN0hf6pE9+EG6QvtAnffKDcIP0hT7pk5kCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKZCZApkpkJkCmSmQmQKZKfgAWnb2aFtKN/0AAAAASUVORK5CYII=" alt="Gate 2 Marker">
+            </div>
+        </div>
+        <div class="fold-guide">
+            <span>✂️ Entlang dieser Linie falten für Boden-Aufsteller</span>
+            <strong>SEITE 3 / 7 • TOR 2</strong>
+        </div>
+    </div>
+
+    <!-- SEITE 4: TOR 3 -->
+    <div class="page">
+        <div class="banner">
+            <div>
+                <h1>MARIO KART LIVE</h1>
+                <div class="subtitle">SMART CHECKPOINT SYSTEM • ARUCO ID 03</div>
+            </div>
+            <div class="badge" style="background:#AA00FF; color: white;">CHECKPOINT 3</div>
+        </div>
+        <div class="checkered-bar"></div>
+        <div class="marker-card">
+            <div class="gate-title" style="color: #AA00FF;">🚩 TOR 3: HAARNADEL-KURVE</div>
+            <div class="gate-desc">Platziere dieses Blatt vor der Rückführung zur Zielgeraden</div>
+            <div class="marker-frame">
+                <img class="marker-img" src="data:image/png;base64,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EWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskBFhg2yQEWGDbJARYYNskHMK5JwCOadAzimQcwrknAI5p0DOKZBzCuScAjmnQM4pkHMK5JwCOadAzimQcwrknAI5p0DOKZBzCuScAjmnQM4pkHMK5JwCOadAzimQcwrknAI5p0DOKZBzCuScAjmnQM4pkHMK5JwCOadAzimQcwrknAI5p0DOKZBzCuScAjmnQM4pkHMK5JwCOadAzimQcwrknAI5p0DOKZBzCuScAjmnQM4pkHMK5JwCOadAzimQcwrknAI5p0DOKZBzCuScAjmnQM4pkHMK5JwCOadAzimQcwrknAI5p0DOKZBzCuScAjmnQM4pkHMK5JwCOadAzimQcwrknAI5p0DOKZBzCuScAjmnQM4pkHMK5JwCOadAzin4AB24WneoSqW/AAAAAElFTkSuQmCC" alt="Gate 3 Marker">
+            </div>
+        </div>
+        <div class="fold-guide">
+            <span>✂️ Entlang dieser Linie falten für Boden-Aufsteller</span>
+            <strong>SEITE 4 / 7 • TOR 3</strong>
+        </div>
+    </div>
+
+    <!-- SEITE 5: TOR 4 (FINISH) -->
+    <div class="page">
+        <div class="banner">
+            <div>
+                <h1>MARIO KART LIVE</h1>
+                <div class="subtitle">SMART CHECKPOINT SYSTEM • ARUCO ID 04</div>
+            </div>
+            <div class="badge" style="background:#FFD600;">FINISH LINE</div>
+        </div>
+        <div class="checkered-bar"></div>
+        <div class="marker-card">
+            <div class="gate-title" style="color: #FF6D00;">🏁 TOR 4: ZIEL-BOGEN (FINISH)</div>
+            <div class="gate-desc">Beim Durchfahren wird die Runde gezählt ("LAP 2 / LAP 3 / FINISH")!</div>
+            <div class="marker-frame finish">
+                <img class="marker-img" src="data:image/png;base64,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" alt="Gate 4 Marker">
+            </div>
+        </div>
+        <div class="fold-guide">
+            <span>✂️ Entlang dieser Linie falten für Boden-Aufsteller</span>
+            <strong>SEITE 5 / 7 • TOR 4 (FINISH)</strong>
+        </div>
+    </div>
+
+    <!-- SEITE 6: NO-GO AREA 1 -->
+    <div class="page">
+        <div class="banner">
+            <div>
+                <h1>MARIO KART LIVE</h1>
+                <div class="subtitle">SAFETY SYSTEM • ARUCO ID 10</div>
+            </div>
+            <div class="badge" style="background:#FF1744; color:white;">VIRTUAL WALL</div>
+        </div>
+        <div class="hazard-bar"></div>
+        <div class="marker-card">
+            <div class="gate-title" style="color: #D50000;">⛔ NO-GO AREA: VIRTUELLE WAND #1</div>
+            <div class="gate-desc">Platziere dieses Blatt vor Schränken, Glas oder empfindlichen Möbeln</div>
+            <div class="marker-frame danger">
+                <img class="marker-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAJYCAAAAACbDccAAAAM8ElEQVR4Ae3BgQ3AQBDCsGT/oekUnKoXtswUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIHMFMhMgcwUyEyBzBTITIEcCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwI8yfSJwfC/In0yYEwfyJ9ciDMn0ifHAjzJ9InB8L8ifTJgTB/In1yIMyfSJ8cCPMn0icHwvyJ9MmBMH8ifXIgzJ9InxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh90icHQp+8IfRJnxwIffKG0Cd9ciD0yRtCn/TJgdAnbwh9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" alt="Virtual Wall Marker 1">
+            </div>
+        </div>
+        <div class="hazard-bar"></div>
+        <div class="fold-guide">
+            <span>✂️ Entlang dieser Linie falten für Boden-Aufsteller</span>
+            <strong>SEITE 6 / 7 • NO-GO ZONE 1</strong>
+        </div>
+    </div>
+
+    <!-- SEITE 7: NO-GO AREA 2 -->
+    <div class="page">
+        <div class="banner">
+            <div>
+                <h1>MARIO KART LIVE</h1>
+                <div class="subtitle">SAFETY SYSTEM • ARUCO ID 11</div>
+            </div>
+            <div class="badge" style="background:#FF1744; color:white;">VIRTUAL WALL</div>
+        </div>
+        <div class="hazard-bar"></div>
+        <div class="marker-card">
+            <div class="gate-title" style="color: #D50000;">⛔ NO-GO AREA: VIRTUELLE WAND #2</div>
+            <div class="gate-desc">Zweite Sperrzone (z.B. Haustier-Ecke oder Kabel-Kanal)</div>
+            <div class="marker-frame danger">
+                <img class="marker-img" src="data:image/png;base64,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" alt="Virtual Wall Marker 2">
+            </div>
+        </div>
+        <div class="hazard-bar"></div>
+        <div class="fold-guide">
+            <span>✂️ Entlang dieser Linie falten für Boden-Aufsteller</span>
+            <strong>SEITE 7 / 7 • NO-GO ZONE 2</strong>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -94,6 +94,10 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     private val _engineSoundEnabled = MutableStateFlow(prefs.getBoolean("engine_sound_enabled", true))
     val engineSoundEnabled: StateFlow<Boolean> = _engineSoundEnabled.asStateFlow()
 
+    // Touch & Gamepad configuration (Default false: GameSir physical gamepad is primary!)
+    private val _touchControlsEnabled = MutableStateFlow(prefs.getBoolean("touch_controls_enabled", false))
+    val touchControlsEnabled: StateFlow<Boolean> = _touchControlsEnabled.asStateFlow()
+
     val isRecording: StateFlow<Boolean> = videoRecorder.isRecording
     val recordingDurationSec: StateFlow<Int> = videoRecorder.durationSec
     val lastSavedVideoPath: StateFlow<String?> = videoRecorder.lastSavedPath
@@ -101,7 +105,7 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
     private val _currentCommand = MutableStateFlow(DriveCommand())
     val currentCommand: StateFlow<DriveCommand> = _currentCommand.asStateFlow()
 
-    private val _inputSource = MutableStateFlow("Touch")
+    private val _inputSource = MutableStateFlow(if (prefs.getBoolean("touch_controls_enabled", false)) "Touch" else "GameSir Pad")
     val inputSource: StateFlow<String> = _inputSource.asStateFlow()
 
     private val _isGamepadActive = MutableStateFlow(false)
@@ -281,11 +285,11 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
             }
         }
 
-        // Continuous ~30 Hz AR simulation loop
+        // Continuous ~60 Hz AR simulation loop
         arUpdateJob = viewModelScope.launch(Dispatchers.Default) {
             var lastTick = System.currentTimeMillis()
             while (isActive) {
-                delay(33) // ~30 Hz
+                delay(16) // ~60 Hz
                 val now = System.currentTimeMillis()
                 val dt = ((now - lastTick).coerceIn(1, 100) / 1000f)
                 lastTick = now
@@ -685,6 +689,12 @@ class CockpitViewModel(application: Application) : AndroidViewModel(application)
         _engineSoundEnabled.value = enabled
         soundManager.isEngineSoundEnabled = enabled
         prefs.edit().putBoolean("engine_sound_enabled", enabled).apply()
+    }
+
+    fun setTouchControlsEnabled(enabled: Boolean) {
+        _touchControlsEnabled.value = enabled
+        _inputSource.value = if (enabled) "Touch" else "GameSir Pad"
+        prefs.edit().putBoolean("touch_controls_enabled", enabled).apply()
     }
 
     fun saveSettings(newIp: String, newMode: VideoStreamMode) {

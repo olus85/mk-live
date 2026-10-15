@@ -27,76 +27,29 @@ object TrackManager {
 
     fun getBuiltinPresets(): List<TrackPreset> {
         return listOf(
-            // 1. Wohnzimmer Grand Prix (Closed Loop Circuit)
+            // 1. Dynamic Room Arcade (Spawns procedurally ahead on drivable floor - 0% wall collisions!)
             TrackPreset(
-                id = "cup_mushroom_1",
-                name = "Mushroom Cup: Living Room GP",
-                cup = "🍄 Mushroom Cup",
+                id = "room_dynamic_arcade",
+                name = "⚡ Dynamic Room Arcade",
+                cup = "🏆 Wohnzimmer Cup",
                 difficulty = "★☆☆",
                 drawableResName = "art_cup_mushroom",
                 elements = listOf(
-                    // North Straight
-                    TrackElementData("COIN", 0.0f, 0.9f),
-                    TrackElementData("DASH_PAD", 0.0f, 1.7f),
-                    TrackElementData("COIN", 0.0f, 2.5f),
-                    TrackElementData("GATE", 0.0f, 3.2f, gateNumber = 1),
-                    // East Turn
-                    TrackElementData("COIN", 0.7f, 3.2f),
-                    TrackElementData("ITEM_BOX", 1.5f, 3.2f),
-                    TrackElementData("GATE", 2.2f, 3.2f, gateNumber = 2),
-                    // South Straight (Returning)
-                    TrackElementData("COIN", 2.2f, 2.3f),
-                    TrackElementData("DASH_PAD", 2.2f, 1.5f),
-                    TrackElementData("GATE", 2.2f, 0.6f, gateNumber = 3),
-                    // West Turn (Into Finish Line)
-                    TrackElementData("COIN", 1.5f, 0.6f),
-                    TrackElementData("COIN", 0.7f, 0.6f),
-                    TrackElementData("GATE", 0.0f, 0.6f, gateNumber = 4, isFinishLine = true)
+                    TrackElementData("COIN", 0.0f, 1.0f),
+                    TrackElementData("DASH_PAD", 0.0f, 1.8f),
+                    TrackElementData("ITEM_BOX", 0.0f, 2.6f),
+                    TrackElementData("GATE", 0.0f, 3.4f, gateNumber = 1)
                 )
             ),
 
-            // 2. Turbo Speed Oval (Fast 3-Gate Loop)
+            // 2. Drive & Paint: Eigene Strecke in der Wohnung abfahren
             TrackPreset(
-                id = "cup_flower_1",
-                name = "Flower Cup: Nitro Oval",
-                cup = "🌸 Flower Cup",
+                id = "track_builder_circuit",
+                name = "🛠️ Drive & Paint (Eigene Strecke)",
+                cup = "🎨 Custom Circuit",
                 difficulty = "★★☆",
-                drawableResName = "art_cup_flower",
-                elements = listOf(
-                    // Straight 1
-                    TrackElementData("DASH_PAD", 0.0f, 1.2f),
-                    TrackElementData("COIN", 0.0f, 2.2f),
-                    TrackElementData("GATE", 0.0f, 3.4f, gateNumber = 1),
-                    // Curve 1
-                    TrackElementData("ITEM_BOX", 1.2f, 3.4f),
-                    TrackElementData("GATE", 2.4f, 3.4f, gateNumber = 2),
-                    // Back Straight
-                    TrackElementData("DASH_PAD", 2.4f, 2.0f),
-                    TrackElementData("COIN", 2.4f, 1.0f),
-                    TrackElementData("GATE", 2.4f, 0.2f, gateNumber = 3, isFinishLine = true),
-                    // Curve 2
-                    TrackElementData("DASH_PAD", 1.2f, 0.2f)
-                )
-            ),
-
-            // 3. Balloon Battle Combat Arena
-            TrackPreset(
-                id = "arena_battle_1",
-                name = "Star Cup: Combat Coliseum",
-                cup = "⭐ Star Cup",
-                difficulty = "★★★",
-                drawableResName = "art_cup_star",
-                elements = listOf(
-                    TrackElementData("ITEM_BOX", -1.0f, 2.0f),
-                    TrackElementData("ITEM_BOX", 1.0f, 2.0f),
-                    TrackElementData("DASH_PAD", 0.0f, 2.8f),
-                    TrackElementData("ITEM_BOX", 0.0f, 3.8f),
-                    TrackElementData("COIN", -1.2f, 3.0f),
-                    TrackElementData("COIN", 1.2f, 3.0f),
-                    TrackElementData("BANANA", -0.4f, 2.0f),
-                    TrackElementData("BANANA", 0.4f, 2.0f),
-                    TrackElementData("GATE", 0.0f, 4.8f, gateNumber = 1, isFinishLine = true)
-                )
+                drawableResName = "art_mode_track_builder",
+                elements = emptyList()
             )
         )
     }

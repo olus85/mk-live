@@ -61,6 +61,7 @@ fun CockpitScreen(
     val arEnabled by viewModel.arEnabled.collectAsState()
     val sfxEnabled by viewModel.sfxEnabled.collectAsState()
     val engineSoundEnabled by viewModel.engineSoundEnabled.collectAsState()
+    val touchControlsEnabled by viewModel.touchControlsEnabled.collectAsState()
 
     val coins by viewModel.arEngine.coinsCollected.collectAsState()
     val currentLap by viewModel.arEngine.currentLap.collectAsState()
@@ -152,14 +153,16 @@ fun CockpitScreen(
                 )
             }
 
-            // 3. VIRTUAL TOUCH CONTROLLER (Auto-hides on external gamepad)
-            VirtualTouchOverlay(
-                isGamepadActive = isGamepadActive,
-                onDriveCommand = { t, s, b, _ ->
-                    viewModel.handleTouchInput(t, s, b)
-                },
-                modifier = Modifier.fillMaxSize()
-            )
+            // 3. OPTIONAL VIRTUAL TOUCH CONTROLLER (Enabled via Settings, default false for clean gamepad view)
+            if (touchControlsEnabled) {
+                VirtualTouchOverlay(
+                    isGamepadActive = isGamepadActive,
+                    onDriveCommand = { t, s, b, _ ->
+                        viewModel.handleTouchInput(t, s, b)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
             // 4. COCKPIT INSTRUMENTS, HUD OVERLAY, AR STATS & ACTIONS
             CockpitOverlay(
@@ -228,6 +231,7 @@ fun CockpitScreen(
                 isEngineSoundEnabled = engineSoundEnabled,
                 isVrMode = isVrMode,
                 currentLanguage = currentLanguage,
+                isTouchControlsEnabled = touchControlsEnabled,
                 onSetRecordingOverlay = { viewModel.setRecordingOverlay(it) },
                 onSetRecordingAudio = { viewModel.setRecordingAudio(it) },
                 onSetRecordingColorSwap = { viewModel.setRecordingColorSwap(it) },
@@ -236,6 +240,7 @@ fun CockpitScreen(
                 onSetEngineSoundEnabled = { viewModel.setEngineSoundEnabled(it) },
                 onSetVrMode = { viewModel.setVrMode(it) },
                 onSetLanguage = { viewModel.setLanguage(context, it) },
+                onSetTouchControlsEnabled = { viewModel.setTouchControlsEnabled(it) },
                 onSave = { newIp, newMode ->
                     viewModel.saveSettings(newIp, newMode)
                 },

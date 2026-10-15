@@ -35,9 +35,10 @@ class ProjectileElement(
     hitRadius = if (isRocket) 0.22f else 0.12f,
     type = if (isRocket) ArElementType.PROJECTILE_ROCKET else ArElementType.PROJECTILE_TRACER
 ) {
-    private val speed = if (isRocket) 5.5f else 22.0f // m/s
-    private var lifetimeSec = if (isRocket) 2.2f else 0.45f
+    private val speed = if (isRocket) 3.4f else 16.0f // m/s (visible arcade speed!)
+    private var lifetimeSec = if (isRocket) 2.2f else 0.65f
     var isDetonated = false
+    var onEmitTrail: ((screenX: Float, screenY: Float) -> Unit)? = null
 
     companion object {
         private val rocketBodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -53,14 +54,14 @@ class ProjectileElement(
         private val rocketFlamePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.parseColor("#FFEA00")
             style = Paint.Style.FILL
-            setShadowLayer(8f, 0f, 0f, Color.RED)
+            setShadowLayer(14f, 0f, 0f, Color.RED)
         }
 
         private val tracerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#FFD600")
+            color = Color.parseColor("#FFEA00")
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
-            setShadowLayer(6f, 0f, 0f, Color.parseColor("#FF6D00"))
+            setShadowLayer(12f, 0f, 0f, Color.parseColor("#FF6D00"))
         }
     }
 
@@ -81,7 +82,7 @@ class ProjectileElement(
             var diff = targetAngle - headingRad
             while (diff < -Math.PI) diff += (Math.PI * 2).toFloat()
             while (diff > Math.PI) diff -= (Math.PI * 2).toFloat()
-            headingRad += (diff * 4.0f * dt).coerceIn(-1.5f * dt, 1.5f * dt)
+            headingRad += (diff * 4.5f * dt).coerceIn(-2.0f * dt, 2.0f * dt)
         }
 
         // Move forward
@@ -104,23 +105,26 @@ class ProjectileElement(
 
         if (isRocket) {
             val bmp = ArAssets.rocketBitmap
-            val rSize = 28f * scale
-            if (rSize < 4f) return
+            // Bold AAA scale: clearly visible Red Shell rocket!
+            val rSize = (115f * scale).coerceIn(24f, 320f)
 
             // Floor Shadow
-            val shadowRx = (rSize * 0.4f).coerceIn(3f, 30f)
-            val shadowRy = (shadowRx * 0.4f).coerceIn(2f, 15f)
-            ArAssets.drawGroundShadow(canvas, cx, proj.groundY, shadowRx, shadowRy, alpha = 90)
+            val shadowRx = (rSize * 0.45f).coerceIn(4f, 60f)
+            val shadowRy = (shadowRx * 0.45f).coerceIn(2f, 25f)
+            ArAssets.drawGroundShadow(canvas, cx, proj.groundY, shadowRx, shadowRy, alpha = 110)
+
+            // Emit live particle smoke & fire trail
+            onEmitTrail?.invoke(cx, cy + rSize * 0.35f)
 
             if (bmp != null) {
                 val dstRect = RectF(cx - rSize / 2f, cy - rSize / 2f, cx + rSize / 2f, cy + rSize / 2f)
                 val srcRect = Rect(0, 0, bmp.width, bmp.height)
                 canvas.drawBitmap(bmp, srcRect, dstRect, null)
             } else {
-                // Cylindrical Body
-                val rW = 8f * scale
+                // Cylindrical Body fallback
+                val rW = 20f * scale
                 val bodyRect = RectF(cx - rW / 2f, cy - rSize / 2f, cx + rW / 2f, cy + rSize / 2f)
-                canvas.drawRoundRect(bodyRect, 2f, 2f, rocketBodyPaint)
+                canvas.drawRoundRect(bodyRect, 4f, 4f, rocketBodyPaint)
                 val nosePath = Path().apply {
                     moveTo(cx - rW / 2f, cy - rSize / 2f)
                     lineTo(cx, cy - rSize * 0.9f)
@@ -132,17 +136,17 @@ class ProjectileElement(
 
             // Exhaust Thruster Flame
             val flamePath = Path().apply {
-                val fW = 6f * scale
-                moveTo(cx - fW, cy + rSize * 0.45f)
-                lineTo(cx, cy + rSize * 0.85f + (Math.random().toFloat() * 6f * scale))
-                lineTo(cx + fW, cy + rSize * 0.45f)
+                val fW = 12f * scale
+                moveTo(cx - fW, cy + rSize * 0.42f)
+                lineTo(cx, cy + rSize * 0.85f + (Math.random().toFloat() * 12f * scale))
+                lineTo(cx + fW, cy + rSize * 0.42f)
                 close()
             }
             canvas.drawPath(flamePath, rocketFlamePaint)
         } else {
-            // Render High-speed Minigun Tracer Line
-            val tracerLen = 22f * scale
-            tracerPaint.strokeWidth = (2.5f * scale).coerceIn(1.5f, 6f)
+            // Render High-speed Minigun Tracer Line (Thick, glowing beam)
+            val tracerLen = (36f * scale).coerceIn(14f, 80f)
+            tracerPaint.strokeWidth = (6.0f * scale).coerceIn(3.0f, 14f)
             canvas.drawLine(cx, cy + tracerLen, cx, cy - tracerLen, tracerPaint)
         }
     }

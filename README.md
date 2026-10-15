@@ -18,13 +18,24 @@ Drive and record **Mario Kart Live: Home Circuit** without a Nintendo Switch —
 | 🏆 Spielmodi & Grand Prix | 🍄 Cup & Strecken-Auswahl |
 | :---: | :---: |
 | <img src="docs/screenshots/04_game_modes.png" width="100%"> | <img src="docs/screenshots/05_cup_selection.png" width="100%"> |
-| **Grand Prix, Ballon-Schlacht, Zeitfahren, Streckeneditor** | **Pilz-Cup, Blumen-Cup, Sternen-Cup** |
+| **Grand Prix, Ballon-Schlacht, Zeitfahren, Streckeneditor** | **⚡ Dynamic Room Arcade & Drive & Paint Circuit** |
+
+| 🚀 3D Raketen-Kampf & Partikel | 🕹️ GameSir Controller Priorität |
+| :---: | :---: |
+| <img src="docs/screenshots/07_rocket_combat.png" width="100%"> | <img src="docs/screenshots/08_settings_gamepad.png" width="100%"> |
+| **Red Shell Rakete mit Rauch/Feuer-Schweif & Ampelstart** | **Freie Kamerasicht (Touch-Controls optional)** |
 
 <p align="center">
   <img src="docs/screenshots/06_cockpit_ar_hud.png" alt="Cockpit AR HUD" width="100%">
   <br>
-  <em>🏁 Dynamisches Cockpit-HUD: Rocket-Start-Ampel, 3D AR-Tore, Münzen, Speedometer & Rundenzeiten</em>
+  <em>🏁 Dynamisches Cockpit-HUD: 3D AR-Tore, Münzen, Turbo-Pads, Speedometer & Rundenzeiten</em>
 </p>
+
+### 📄 Druckbare DIN-A4 Smart-Marker (`docs/markers/`)
+Bereit zum Ausdrucken für deine Wohnung:
+* 🖨️ **[HTML Druckvorlage öffnen (`docs/markers/print_markers.html`)](docs/markers/print_markers.html)**: Mit `Strg + P` direkt im Browser auf DIN-A4 ausdrucken!
+* **Tor 1 bis 4 (Checkpoints & Start/Ziel)**: Drift-freies Tracking beim Vorbeifahren.
+* **No-Go Zonen / Virtuelle Wände**: Warnbarrieren vor Möbeln und Wänden.
 
 ---
 

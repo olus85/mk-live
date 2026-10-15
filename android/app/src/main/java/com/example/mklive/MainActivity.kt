@@ -65,10 +65,10 @@ class MainActivity : ComponentActivity() {
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         insetsController.hide(WindowInsetsCompat.Type.systemBars())
 
-        // Continuous 30 Hz ticker: ensures holding R2 or stick sends steady stream to prevent server deadman cutoff
+        // Continuous ~60 Hz ticker: ensures holding R2 or stick sends steady stream to prevent server deadman cutoff
         lifecycleScope.launch {
             while (isActive) {
-                delay(33) // ~30 Hz
+                delay(16) // ~60 Hz
                 if (isInputActive) {
                     dispatchGamepadInput()
                 }
@@ -164,7 +164,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         val isGamepad = (event.source and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
-                (event.source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+                (event.source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK ||
+                (event.source and InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD ||
+                KeyEvent.isGamepadButton(keyCode)
 
         if (isGamepad) {
             activeDeviceName = formatControllerName(event.device?.name)
@@ -363,7 +365,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
         val isGamepad = (event.source and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
-                (event.source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+                (event.source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK ||
+                (event.source and InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD ||
+                KeyEvent.isGamepadButton(keyCode)
 
         if (isGamepad) {
             activeDeviceName = formatControllerName(event.device?.name)

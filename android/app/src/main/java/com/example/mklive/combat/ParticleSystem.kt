@@ -269,6 +269,39 @@ class ParticleSystem {
         )
     }
 
+    fun emitRocketTrail(screenX: Float, screenY: Float) {
+        // Smoke puff
+        particles.add(
+            Particle(
+                x = screenX + (random.nextFloat() * 12f - 6f),
+                y = screenY + (random.nextFloat() * 12f - 6f),
+                vx = (random.nextFloat() * 24f - 12f),
+                vy = (random.nextFloat() * -30f - 10f),
+                size = 24f + (random.nextFloat() * 16f),
+                color = Color.argb(180, 220, 220, 220),
+                alpha = 0.9f,
+                lifeSec = 0.5f,
+                maxLifeSec = 0.5f,
+                type = ParticleType.SMOKE
+            )
+        )
+        // Fiery exhaust spark
+        particles.add(
+            Particle(
+                x = screenX,
+                y = screenY,
+                vx = (random.nextFloat() * 40f - 20f),
+                vy = (random.nextFloat() * 30f + 10f),
+                size = 8f + (random.nextFloat() * 6f),
+                color = if (random.nextBoolean()) Color.parseColor("#FF9100") else Color.parseColor("#FFEA00"),
+                alpha = 1.0f,
+                lifeSec = 0.28f,
+                maxLifeSec = 0.28f,
+                type = ParticleType.EXPLOSION_SPARK
+            )
+        )
+    }
+
     fun emitSpeedLines(viewWidth: Float, viewHeight: Float) {
         val count = 4
         val cx = viewWidth / 2f
