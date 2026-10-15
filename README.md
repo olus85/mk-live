@@ -1,8 +1,30 @@
 # MK Live Cockpit & Base Station
 
-Drive and record **Mario Kart Live: Home Circuit** without a Nintendo Switch — now with **Meta Quest 3 VR Mode**! 🏎️🥽💨
+Drive and record **Mario Kart Live: Home Circuit** without a Nintendo Switch — now with **Meta Quest 3 VR Mode** & **AAA Arcade UI**! 🏎️🥽💨
 
-Transform a Linux PC, Raspberry Pi, or Steam Deck with a Wi-Fi adapter into an autonomous Mario Kart base station. Drive with an ultra-low latency native Android cockpit app on your smartphone or immerse yourself inside the cockpit with the **Meta Quest 3** using Touch Plus controllers, live stereoscopic FPV video, and telemetry-reactive artificial horizon instrumentation.
+<p align="center">
+  <img src="docs/screenshots/01_start_screen.png" alt="Mario Kart Live Home Circuit Start Screen" width="100%">
+</p>
+
+---
+
+## 📸 Ingame & UI Showcase (v2.3.2 AAA Edition)
+
+| 🏎️ Fahrer-Auswahl (Taha & Mario) | 🦖 Fahrer-Auswahl (Bowser & Yoshi) |
+| :---: | :---: |
+| <img src="docs/screenshots/02_character_selection_taha.png" width="100%"> | <img src="docs/screenshots/03_character_selection_bowser.png" width="100%"> |
+| **Taha (Minecraft Creeper Monster Truck), Mario, Luigi, Peach** | **Bowser (Flame Buggy), Yoshi, Cyber Kart** |
+
+| 🏆 Spielmodi & Grand Prix | 🍄 Cup & Strecken-Auswahl |
+| :---: | :---: |
+| <img src="docs/screenshots/04_game_modes.png" width="100%"> | <img src="docs/screenshots/05_cup_selection.png" width="100%"> |
+| **Grand Prix, Ballon-Schlacht, Zeitfahren, Streckeneditor** | **Pilz-Cup, Blumen-Cup, Sternen-Cup** |
+
+<p align="center">
+  <img src="docs/screenshots/06_cockpit_ar_hud.png" alt="Cockpit AR HUD" width="100%">
+  <br>
+  <em>🏁 Dynamisches Cockpit-HUD: Rocket-Start-Ampel, 3D AR-Tore, Münzen, Speedometer & Rundenzeiten</em>
+</p>
 
 ---
 
